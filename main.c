@@ -1,4 +1,5 @@
 #include "main.h"
+#include <avr/power.h>
 #include "uart.h"
 #include "console.h"
 #include "appdb.h"
@@ -10,14 +11,10 @@
 #include "adc.h"
 #include "relay.h"
 #include "tui.h"
-#include "saver.h"
-#include "dallas.h"
-#include "batlvl.h"
-#include "i2c.h"
 
 #ifdef ENABLE_UARTIF
 #define RECVBUFLEN 64
-const unsigned char prompt[] PROGMEM = "\x0D\x0AM328>";
+const unsigned char prompt[] PROGMEM = "\x0D\x0AX32E5>";
 unsigned char recvbuf[RECVBUFLEN];
 unsigned char token_count;
 unsigned char* tokenptrs[MAXTOKENS];
@@ -38,45 +35,55 @@ static void uartif_run(void) { }
 #endif
 
 
-static void noints(void) {
-	EIMSK = 0;
-	EIFR = 0x03;
-	PCICR = 0;
-	PCMSK2 = 0;
-	PCMSK1 = 0;
-	PCMSK0 = 0;
-	sei();
-}
-
 void mini_mainloop(void) {
 	timer_run();
 	adc_run();
 	backlight_run();
-	tui_alarm_run();
-	batlvl_run();
 	relay_run();
-	dallas_run();
 	uartif_run();
 }
 
 void main (void) __attribute__ ((noreturn));
 
+static void xmega_clocks(void) {
+	OSC.CTRL = OSC_RC32MEN_bm; //enable 32MHz oscillator
+	while(!(OSC.STATUS & OSC_RC32MRDY_bm));	//wait for stability
+	CCP = CCP_IOREG_gc; //secured access
+	CLK.CTRL = 0x01; //choose this osc source as clk
+}
+
+/* VPORT0 = A, VPORT1 = C, VPORT2 = D, VPORT3 = R */
+static void xmega_pins(void) {
+	PORTCFG_MPCMASK = 0x03;
+	PORTR_PIN0CTRL = PORT_OPC_PULLUP_gc;
+
+	PORTCFG_MPCMASK = 0xFF;
+	PORTA_PIN0CTRL = PORT_ISC_INPUT_DISABLE_gc;
+
+	PORTCFG_MPCMASK = 0xFC;
+	PORTD_PIN0CTRL = PORT_OPC_PULLUP_gc;
+
+	VPORT1_OUT = 0x10;
+	VPORT1_DIR = 0xFF;
+
+	VPORT2_OUT = 0x08;
+	VPORT2_DIR = 0x0B;
+}
+
 void main(void) {
 	cli();
-	clock_prescale_set(clock_div_1);
-	noints();
-	i2c_init(); // It will need to be before uart_init eventually
+	xmega_clocks();
+	xmega_pins();
 	uart_init();
 	lcd_init();
 	backlight_init();
 	timer_init(); // must be after backlight init
 	buttons_init();
 	adc_init();
-	batlvl_init();
 	relay_init();
-	dallas_init();
 	tui_init();
-	saver_load_settings();
+	PMIC_CTRL = 0x87;
+	sei();
 #ifdef ENABLE_UARTIF
 	sendstr_P((PGM_P)prompt); // initial prompt
 #endif

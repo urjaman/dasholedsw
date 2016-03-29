@@ -5,7 +5,6 @@
 #include "backlight.h"
 #include "relay.h"
 
-#ifndef ALARMCLOCK
 
 #define RLY_THINKSTACKDEPTH 4
 static uint8_t relay_mode;
@@ -24,8 +23,6 @@ static void relay_clr_thinkstack(void) {
 }
 
 void relay_init(void) {
-	PORTC &= ~_BV(3);
-	DDRC |= _BV(3);
 	relay_clr_thinkstack();
 	relay_mode = RLY_MODE_OFF;
 	relay_last_act_sec  = 0;
@@ -39,11 +36,11 @@ void relay_set(uint8_t mode) {
 		default:
 		case RLY_MODE_OFF:
 			relay_ext_state = relay_mode = RLY_MODE_OFF;
-			PORTC &= ~_BV(3);
+			VPORT2_OUT &= ~_BV(0);
 			break;
 		case RLY_MODE_ON:
 			relay_ext_state = relay_mode = RLY_MODE_ON;
-			PORTC |= _BV(3);
+			VPORT2_OUT |= _BV(0);
 			break;
 		case RLY_MODE_AUTO:
 			relay_mode = RLY_MODE_AUTO;
@@ -63,7 +60,7 @@ void relay_set_keepon(uint8_t v) {
 
 
 static uint8_t relay_int_get(void) {
-	return (PINC&_BV(3)) ? RLY_MODE_ON : RLY_MODE_OFF;
+	return (VPORT2_IN&_BV(0)) ? RLY_MODE_ON : RLY_MODE_OFF;
 }
 
 uint8_t relay_get(void) {
@@ -113,64 +110,10 @@ void relay_run(void) {
 			backlight_activate(); // Something to show off
 			relay_last_act_sec = timer_get();
 			if (relay_last_autodecision == RLY_MODE_ON) {
-				PORTC |= _BV(3);
+				VPORT2_OUT |= _BV(0);
 			} else {
-				PORTC &= ~_BV(3);
+				VPORT2_OUT &= ~_BV(0);
 			}
 		}
 	}
 }
-
-#else
-// Alarm clock implementation of "relay" (only used for control of beep sound)
-
-void relay_init(void) {
-	PORTC &= ~_BV(3);
-	DDRC |= _BV(3);
-}
-
-void relay_set(uint8_t mode) {
-	switch (mode) {
-		default:
-		case RLY_MODE_OFF:
-			PORTC &= ~_BV(3);
-			break;
-		case RLY_MODE_ON:
-			PORTC |= _BV(3);
-			break;
-		case RLY_MODE_AUTO:
-			break;
-	}
-}
-
-void relay_set_autovoltage(uint16_t v) {
-	v=v;
-}
-
-void relay_set_keepon(uint8_t v) {
-	v=v;
-}
-
-uint8_t relay_get(void) {
-	return (PINC&_BV(3)) ? RLY_MODE_ON : RLY_MODE_OFF;
-}
-
-uint8_t relay_get_mode(void) {
-	return relay_get();
-}
-
-uint16_t relay_get_autovoltage(void) {
-	return 858*4;
-}
-
-uint8_t relay_get_autodecision(void) {
-	return RLY_MODE_ON;
-}
-
-uint8_t relay_get_keepon(void) {
-	return 90;
-}
-
-void relay_run(void) {
-}
-#endif

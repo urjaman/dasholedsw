@@ -10,11 +10,6 @@ uint8_t timer_get_5hzp(void);
 uint8_t timer_get_5hz_cnt(void);
 void timer_set_waiting(void);
 
-// New current date&time functions.
-void timer_set_time(struct mtm *tm);
-void timer_get_time(struct mtm *tm);
-uint8_t timer_time_isvalid(void);
-
 
 // Delay us and delay ms, both have a limit of 200ms (for 5hzp)
 // and a granularity of US_PER_SSUNIT (32us)
@@ -33,7 +28,7 @@ uint16_t timer_get_lin_ss_u16(void);
 /* timer-ll.c is used to consolidate access to todo and subsectimer 
    to a single object */
 
-#define SSTC ((F_CPU+128)/256)
+#define SSTC ((F_CPU+512)/1024)
 #define FCPUKHZ ((F_CPU+500)/1000)
-#define US_PER_SSUNIT ((256000+(FCPUKHZ/2))/FCPUKHZ)
+#define US_PER_SSUNIT ((1024000+(FCPUKHZ/2))/FCPUKHZ)
 #endif

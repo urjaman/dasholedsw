@@ -2,25 +2,11 @@
 #include "adc.h"
 #include "timer.h"
 
-// 65536 == no scaling applied
-
-#ifdef ALARMCLOCK
-// Calibration for alarm clock device
-#define ADC_MB_SCALE 65098
-#define ADC_SB_SCALE 65536
-#else
-// Calibration for car relay controller device
-
-// Voltage: 13.63V
-// A: 3515
-// B: 3507
-// Raw 13.63V is 3489,28
 // Thus MB_SCALE = 3489,28 / 3515 * 65536 => 65056,45919
-#define ADC_MB_SCALE 65056
+#define ADC_MB_SCALE 65536
 // SB_SCALE = 3489,28 / 3507 * 65536 => 65204,86284
-#define ADC_SB_SCALE 65205
+#define ADC_SB_SCALE 65536
 
-#endif
 // Calib is 65536+diff, thus saved is diff = calib - 65536.
 int16_t adc_calibration_diff[ADC_MUX_CNT] = { ADC_MB_SCALE-65536, ADC_SB_SCALE-65536 };
 uint16_t adc_raw_values[ADC_MUX_CNT];
@@ -33,16 +19,18 @@ static int16_t adc_bat_diff;
 uint16_t adc_avg_cnt=0;
 
 static void adc_set_mux(uint8_t c) {
-	ADMUX = (ADMUX&0xF0) |  (c&0xF);
+//	ADMUX = (ADMUX&0xF0) |  (c&0xF);
 }
 
 static uint16_t adc_single_read(uint8_t c) {
-	uint16_t rv;
+	uint16_t rv = 0;
+#if 0
 	adc_set_mux(c);
 	ADCSRA |= _BV(ADSC);
 	while (ADCSRA & _BV(ADSC));
 	rv = ADCL;
 	rv |= (ADCH)<<8;
+#endif
 	return rv;
 }
 
@@ -95,34 +83,40 @@ void adc_print_dV(unsigned char* buf, uint16_t v) {
 static void adc_values_scale(void) {
 	uint32_t adc_scale_mb = ( ((int32_t)65536L) + adc_calibration_diff[0] );
 	uint32_t adc_scale_sb = ( ((int32_t)65536L) + adc_calibration_diff[1] );
-	adc_values[0] = (((uint32_t)adc_raw_values[0])*adc_scale_mb)/65536;	
-	adc_values[1] = (((uint32_t)adc_raw_values[1])*adc_scale_sb)/65536;	
-	adc_minv[0] = (((uint32_t)adc_raw_minv[0])*adc_scale_mb)/65536;	
-	adc_minv[1] = (((uint32_t)adc_raw_minv[1])*adc_scale_sb)/65536;	
-	adc_maxv[0] = (((uint32_t)adc_raw_maxv[0])*adc_scale_mb)/65536;	
-	adc_maxv[1] = (((uint32_t)adc_raw_maxv[1])*adc_scale_sb)/65536;	
+	adc_values[0] = (((uint32_t)adc_raw_values[0])*adc_scale_mb)/65536;
+	adc_values[1] = (((uint32_t)adc_raw_values[1])*adc_scale_sb)/65536;
+	adc_minv[0] = (((uint32_t)adc_raw_minv[0])*adc_scale_mb)/65536;
+	adc_minv[1] = (((uint32_t)adc_raw_minv[1])*adc_scale_sb)/65536;
+	adc_maxv[0] = (((uint32_t)adc_raw_maxv[0])*adc_scale_mb)/65536;
+	adc_maxv[1] = (((uint32_t)adc_raw_maxv[1])*adc_scale_sb)/65536;
 	adc_bat_diff = adc_values[0] - adc_values[1];
-}	
+}
 
 void adc_init(void) {
 	uint8_t i;
+#if 0
 	ADMUX = _BV(REFS0);
 	ADCSRA = _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1);
 	DIDR0 = _BV(ADC0D) | _BV(ADC1D);
+#endif
 	for (i=0;i<ADC_MUX_CNT;i++) {
 		adc_raw_values[i] = adc_single_read(i)<<2;
 		adc_raw_minv[i] = adc_raw_values[i];
 		adc_raw_maxv[i] = adc_raw_values[i];
 	}
 	adc_values_scale();
+#if 0
 	adc_init_ll();
 	adc_set_mux(0);
 	ADCSRA |= _BV(ADSC) | _BV(ADIE);
+#endif
 }
 
 void adc_run(void) {
+#if 0
 	if (timer_get_1hzp()) {
 		adc_avg_cnt = adc_run_ll(adc_raw_values,adc_raw_minv,adc_raw_maxv);
 		if (adc_avg_cnt) adc_values_scale();
 	}
+#endif
 }

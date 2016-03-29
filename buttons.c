@@ -3,17 +3,15 @@
 #include "buttons.h"
 #include "timer.h"
 
-static uint8_t btn_lock = 0;
+#define BTNS (_BV(4)|_BV(5)|_BV(6)|_BV(7))
 
 void buttons_init(void) {
-	PORTD |= _BV(2) | _BV(3); // enable pull-ups
 }
 
 uint8_t buttons_get_v(void) {
-	if (btn_lock) return BUTTON_NONE;
-	uint8_t rv = (uint8_t)~PIND;
-	rv = (uint8_t)rv & (uint8_t)(_BV(2)|_BV(3));
-	rv = (uint8_t)rv >> (uint8_t)2;
+	uint8_t rv = (uint8_t)~VPORT2_IN;
+	rv = (uint8_t)rv & (uint8_t)BTNS;
+	rv = (uint8_t)rv >> (uint8_t)4;
 	return rv;
 }
 
@@ -33,6 +31,3 @@ uint8_t buttons_get(void) {
 	}
 }
 
-void buttons_lock(uint8_t lock) {
-	btn_lock = lock;
-}

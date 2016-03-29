@@ -3,17 +3,14 @@
 #include "adc.h"
 #include "relay.h"
 #include "backlight.h"
-#include "hd44780.h"
 
 /* In DispCombo backlight module will also handle contrast. */
 /* Contrast: PD5 OCOB */
 
-static uint8_t bl_contrast_value;
 static uint8_t bl_drv_value;
 static uint8_t bl_value;
 static uint8_t bl_to;
 static uint32_t bl_last_sec=0;
-static uint8_t bl_lock=0;
 const uint8_t backlight_values[17] PROGMEM = {
 	0, 1, 2, 3, 4, 8, 13, 21, 32, 45, 62, 83, 108, 137, 171, 210, 255
 };
@@ -23,32 +20,31 @@ static int8_t bl_v_fadeto;
 
 void backlight_simple_set(int8_t v) {
 	if (v < 0) {
-		OCR0A = 0;
-		DDRD &= ~_BV(6);
-		hd44780_wait_ready();
-		hd44780_outcmd(HD44780_DISPCTL(0, 0, 0));
+		TCC4_CCABUF = 0;
+		VPORT1_DIR &= ~_BV(0);
+		// LCD OFF
+
 		bl_v_now = v;
 		return;
 	}
 	if (bl_v_now<0) {
-		hd44780_wait_ready();
-		hd44780_outcmd(HD44780_DISPCTL(1, 0, 0));
+		// LCD ON
 	}
-	uint8_t hwv;
-	hwv = pgm_read_byte(&(backlight_values[v]));
-	DDRD |= _BV(6);
-	OCR0A = hwv;
+	uint16_t hwv;
+	hwv = pgm_read_byte(&(backlight_values[v])) << 2;
+	VPORT1_DIR |= _BV(0);
+	TCC4_CCABUF = hwv;
 	bl_v_now = v;
 }
 
 static void backlight_fader(void) {
 	if (bl_v_fadeto < bl_v_now) {
-		if (bl_v_now>4) {
-			uint8_t v1,v2;
-			v1 = pgm_read_byte(&(backlight_values[bl_v_now]));
-			v2 = pgm_read_byte(&(backlight_values[bl_v_now-1]));
+		if (bl_v_now>1) {
+			uint16_t v1,v2;
+			v1 = pgm_read_byte(&(backlight_values[bl_v_now])) << 2;
+			v2 = pgm_read_byte(&(backlight_values[bl_v_now-1])) << 2;
 			v1 = ((v1-v2)/2)+v2;
-			OCR0A = v1;
+			TCC4_CCABUF = v1;
 			timer_delay_ms(25);
 			backlight_simple_set(bl_v_now-1);
 			timer_delay_ms(25);
@@ -70,16 +66,17 @@ ret:
 
 void backlight_init(void) {
 	const uint8_t backlight_default = 14;
-	DDRD |= _BV(5); // CONTRAST
-	DDRD |= _BV(6); // BACKLIGHT
-	TCCR0A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
-	TCCR0B = _BV(CS00);
-	bl_to = 30;
+
+	TCC4_PER = 1023;
+	TCC4_CTRLB = TC45_WGMODE_SINGLESLOPE_gc;
+	TCC4_CTRLE = TC45_CCAMODE_COMP_gc;
+	TCC4_CTRLA = TC45_CLKSEL_DIV1_gc;
+
+	bl_to = 120;
 	backlight_set(backlight_default);
 	backlight_simple_set(backlight_default);
-	bl_v_fadeto = backlight_default;
+	bl_v_fadeto = -1;
 	bl_drv_value = 7;
-	backlight_set_contrast(59); // 0.1V
 }
 
 void backlight_set(uint8_t v) {
@@ -116,14 +113,12 @@ void backlight_set_to(uint8_t to) {
 }
 
 void backlight_activate(void) {
-	if (bl_lock) return;
 	bl_last_sec = timer_get();
 	bl_v_fadeto = bl_value;
 	backlight_fader();
 }
 
 void backlight_run(void) {
-	if (bl_lock) return;
 	uint32_t diff = timer_get() - bl_last_sec;
 	if (diff >= bl_to) {
 		if (relay_get_autodecision() == RLY_MODE_ON) {
@@ -137,20 +132,5 @@ void backlight_run(void) {
 	backlight_fader();
 }
 
-void backlight_lock(uint8_t lock) {
-	bl_lock = lock;
-}
 
 
-void backlight_set_contrast(uint8_t c) {
-	if (c>CONTRAST_MAX) c = CONTRAST_MAX;
-	c = CONTRAST_MAX - c;
-	bl_contrast_value = c;
-	OCR0B = c;
-}
-
-uint8_t backlight_get_contrast(void) {
-	uint8_t c = bl_contrast_value;
-	if (c>CONTRAST_MAX) return 0;
-	return CONTRAST_MAX - c;
-}

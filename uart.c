@@ -3,7 +3,6 @@
 #include "uart.h"
 #include "console.h"
 #include "timer.h"
-#include "i2c-uart.h"
 #include "cron.h"
 #ifdef ENABLE_UARTMODULE
 
@@ -90,111 +89,9 @@ void uart_wait_txdone(void) {
 }
 
 #else
-#ifdef ENABLE_I2CUARTCON
-#define I2CUART_MAX_RX 64
-#define I2CUART_POLL_PERIOD 10
-static int i2cuarthw_exists = 0;
-static uint8_t i2cuart_lastpoll = 0;
-static uint8_t i2cuart_buf[I2CUART_MAX_RX];
-static uint8_t i2cuart_buf_sz = 0;
-static uint8_t i2cuart_buf_of = 0;
-
-static void i2cuart_poll_task(void);
-static struct cron_task i2cuart_poll = { NULL, i2cuart_poll_task, SSTC, 0 };
-
-
-void uart_wait_txdone(void) { }
-
-void uart_init(void) {
-	i2cuart_buf_sz = 0;
-	i2cuart_buf_of = 0;
-	if (i2cuart_exists(ENABLE_I2CUARTCON)) {
-		i2cuart_poll.ss_freq = i2cuart_init(ENABLE_I2CUARTCON, BAUD);
-		i2cuarthw_exists = 1;
-		cron_add_task(&i2cuart_poll);
-	} else {
-		i2cuarthw_exists = 0;
-	}
-	i2cuart_lastpoll =  timer_get_5hz_cnt();
-}
-
-static uint8_t i2cuart_exist_poll(void) {
-	if (!i2cuarthw_exists) {
-		uint8_t diff = timer_get_5hz_cnt() - i2cuart_lastpoll;
-		if (diff>=I2CUART_POLL_PERIOD) {
-			uart_init();
-		}
-	} else {
-		if (!i2cuart_exists(ENABLE_I2CUARTCON)) {
-			i2cuarthw_exists = 0;
-		}
-		i2cuart_lastpoll =  timer_get_5hz_cnt();
-	}
-	return i2cuarthw_exists;
-}
-
-void uart_send(uint8_t val) {
-	if (!i2cuarthw_exists) return;
-	i2cuart_writefifo(ENABLE_I2CUARTCON, &val, 1);
-}
-
-static uint8_t i2cuart_rx_data(void) {
-	if (!i2cuart_exist_poll()) return 0;
-	uint8_t d = i2cuart_poll_rx(ENABLE_I2CUARTCON, NULL);
-	if (!d) return 0;
-	if (d>I2CUART_MAX_RX) d = I2CUART_MAX_RX;
-	if ((d=i2cuart_readfifo(ENABLE_I2CUARTCON, i2cuart_buf, d))) {
-		i2cuart_buf_of = 0;
-		i2cuart_buf_sz = d;
-	}
-	return d;
-}
-
-static void i2cuart_poll_task(void) {
-	if (uart_isdata()) {
-		timer_set_waiting();
-	}
-	if (!i2cuarthw_exists) {
-		cron_rm_task(&i2cuart_poll);
-	}
-}
-
-uint8_t uart_recv(void) {
-ret_buf:
-	if (i2cuart_buf_sz) {
-		uint8_t c = i2cuart_buf[i2cuart_buf_of++];
-		if (i2cuart_buf_of>=i2cuart_buf_sz) {
-			i2cuart_buf_of = 0;
-			i2cuart_buf_sz = 0;
-		}
-		return c;
-	}
-wait_data:
-	if (i2cuart_rx_data()) {
-		goto ret_buf;
-	} else {
-		if (i2cuart_exist_poll()) {
-			goto wait_data;
-		}
-	}
-	return 0;
-}
-
-uint8_t uart_isdata(void) {
-	if (i2cuart_buf_sz) {
-		return 1;
-	}
-	if (i2cuart_rx_data()) {
-		return 1;
-	}
-	return 0;
-}
-
-#else
 void uart_wait_txdone(void) { }
 void uart_init(void) { }
 void uart_send(uint8_t val) { val = val; }
 uint8_t uart_recv(void) { return 0; }
 uint8_t uart_isdata(void) { return 0; }
-#endif
 #endif

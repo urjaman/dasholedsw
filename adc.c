@@ -9,9 +9,13 @@
 
 // Calib is 65536+diff, thus saved is diff = calib - 65536.
 int16_t adc_calibration_diff[ADC_MUX_CNT] = { ADC_MB_SCALE-65536, ADC_SB_SCALE-65536 };
+
 uint16_t adc_raw_values[ADC_MUX_CNT];
 uint16_t adc_raw_minv[ADC_MUX_CNT];
 uint16_t adc_raw_maxv[ADC_MUX_CNT];
+static uint16_t adc_supersample;
+static uint8_t adc_ss_cnt;
+
 static uint16_t adc_values[ADC_MUX_CNT];
 uint16_t adc_minv[ADC_MUX_CNT];
 uint16_t adc_maxv[ADC_MUX_CNT];
@@ -19,18 +23,18 @@ static int16_t adc_bat_diff;
 uint16_t adc_avg_cnt=0;
 
 static void adc_set_mux(uint8_t c) {
-//	ADMUX = (ADMUX&0xF0) |  (c&0xF);
+	ADCA_CH0_MUXCTRL = (4+c) << 3;
 }
 
 static uint16_t adc_single_read(uint8_t c) {
 	uint16_t rv = 0;
-#if 0
 	adc_set_mux(c);
-	ADCSRA |= _BV(ADSC);
-	while (ADCSRA & _BV(ADSC));
-	rv = ADCL;
-	rv |= (ADCH)<<8;
-#endif
+	ADCA_CTRLA = 0x05;
+	while (!(ADCA_CH0_INTFLAGS & 1));
+	ADCA_CH0_INTFLAGS = 1;
+	rv = ADCA_CH0_RES;
+	if (rv >= 205) rv -= 205;
+	else rv = 0;
 	return rv;
 }
 
@@ -92,24 +96,35 @@ static void adc_values_scale(void) {
 	adc_bat_diff = adc_values[0] - adc_values[1];
 }
 
+void adc_ll_init(void) {
+	for(uint8_t i=0;i<ADC_MUX_CNT;i++) {
+		adc_raw_values[i] = 0;
+		adc_raw_maxv[i] = 0;
+		adc_raw_minv[i] = 0xFFFF;
+		adc_supersample = 0;
+		adc_ss_cnt = 0;
+	}
+}
+
 void adc_init(void) {
 	uint8_t i;
-#if 0
-	ADMUX = _BV(REFS0);
-	ADCSRA = _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1);
-	DIDR0 = _BV(ADC0D) | _BV(ADC1D);
-#endif
+	ADCA_REFCTRL = ADC_BANDGAP_bm;
+	ADCA_PRESCALER = ADC_PRESCALER_DIV256_gc;
+	ADCA_SAMPCTRL = 2;
 	for (i=0;i<ADC_MUX_CNT;i++) {
-		adc_raw_values[i] = adc_single_read(i)<<2;
+		adc_raw_values[i] = adc_single_read(i);
 		adc_raw_minv[i] = adc_raw_values[i];
 		adc_raw_maxv[i] = adc_raw_values[i];
 	}
 	adc_values_scale();
-#if 0
-	adc_init_ll();
+	adc_ll_init();
 	adc_set_mux(0);
+#if 0
 	ADCSRA |= _BV(ADSC) | _BV(ADIE);
 #endif
+	ADCA_CTRLB = 0x08;
+	ADCA_CTRLA = 0x01;
+
 }
 
 void adc_run(void) {

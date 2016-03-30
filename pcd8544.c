@@ -22,185 +22,84 @@
 #define PCD8544_SETBIAS 0x10
 #define PCD8544_SETVOP 0x80
 
-
-static uint8_t pcd8544_buffer[LCDWIDTH * LCDHEIGHT / 8] = {
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFC, 0xFE, 0xFF, 0xFC, 0xE0,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8,
-0xF8, 0xF0, 0xF0, 0xE0, 0xE0, 0xC0, 0x80, 0xC0, 0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x3F, 0x7F,
-0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF, 0xFF,
-0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xE7, 0xC7, 0xC7, 0x87, 0x8F, 0x9F, 0x9F, 0xFF, 0xFF, 0xFF,
-0xC1, 0xC0, 0xE0, 0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC, 0xFC, 0xFC, 0xFC, 0xFE, 0xFE, 0xFE,
-0xFC, 0xFC, 0xF8, 0xF8, 0xF0, 0xE0, 0xC0, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x80, 0xC0, 0xE0, 0xF1, 0xFB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x1F, 0x0F, 0x0F, 0x87,
-0xE7, 0xFF, 0xFF, 0xFF, 0x1F, 0x1F, 0x3F, 0xF9, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xFD, 0xFF,
-0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x3F, 0x0F, 0x07, 0x01, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0xF0, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
-0x7E, 0x3F, 0x3F, 0x0F, 0x1F, 0xFF, 0xFF, 0xFF, 0xFC, 0xF0, 0xE0, 0xF1, 0xFF, 0xFF, 0xFF, 0xFF,
-0xFF, 0xFC, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x01,
-0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x0F, 0x1F, 0x3F, 0x7F, 0x7F,
-0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x7F, 0x1F, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
-
-static uint8_t xUpdateMin, xUpdateMax, yUpdateMin, yUpdateMax;
-
-static void updateBoundingBox(uint8_t xmin, uint8_t ymin, uint8_t xmax, uint8_t ymax) {
-  if (xmin < xUpdateMin) xUpdateMin = xmin;
-  if (xmax > xUpdateMax) xUpdateMax = xmax;
-  if (ymin < yUpdateMin) yUpdateMin = ymin;
-  if (ymax > yUpdateMax) yUpdateMax = ymax;
-}
-
-
-void pcd8544_drawpixel(uint16_t x, uint16_t y, uint8_t c) {
-  // x is which column
-  if (c)
-    pcd8544_buffer[x+ (y/8)*LCDWIDTH] |= _BV(y%8);
-  else
-    pcd8544_buffer[x+ (y/8)*LCDWIDTH] &= ~_BV(y%8);
-
-  updateBoundingBox(x,y,x,y);
-}
-
 static void command(uint8_t c);
-static void data(uint8_t c);
+
+void pcd8544_init(void)
+{
+	const uint8_t contrast = 40;
+	const uint8_t bias = 4;
+	VPORT1_OUT |= _BV(5);
+	// toggle RST low to reset
+	VPORT1_OUT &= ~_BV(3);
+	_delay_us(500);
+	VPORT1_OUT |= _BV(3);
+
+	// get into the EXTENDED mode!
+	command(PCD8544_FUNCTIONSET | PCD8544_EXTENDEDINSTRUCTION );
+
+	// LCD bias select (4 is optimal?)
+	command(PCD8544_SETBIAS | bias);
+
+	command( PCD8544_SETVOP | contrast); // Experimentally determined
 
 
+	// normal mode
+	command(PCD8544_FUNCTIONSET);
 
-void pcd8544_init(void) {
-  const uint8_t contrast = 40;
-  const uint8_t bias = 4;
-  VPORT1_OUT |= _BV(5);
-  // toggle RST low to reset
-  VPORT1_OUT &= ~_BV(3);
-  _delay_us(500);
-  VPORT1_OUT |= _BV(3);
-
-  // get into the EXTENDED mode!
-  command(PCD8544_FUNCTIONSET | PCD8544_EXTENDEDINSTRUCTION );
-
-  // LCD bias select (4 is optimal?)
-  command(PCD8544_SETBIAS | bias);
-
-  command( PCD8544_SETVOP | contrast); // Experimentally determined
-
-
-  // normal mode
-  command(PCD8544_FUNCTIONSET);
-
-  // Set display to Normal
-  command(PCD8544_DISPLAYCONTROL | PCD8544_DISPLAYNORMAL);
-
-  updateBoundingBox(0, 0, LCDWIDTH-1, LCDHEIGHT-1);
-  // Push out pcd8544_buffer to the Display (will show the AFI logo)
-  pcd8544_display();
+	// Set display to Normal
+	command(PCD8544_DISPLAYCONTROL | PCD8544_DISPLAYNORMAL);
+	pcd8544_clear();
 }
 
 
-static void pcdspiwrite(uint8_t d) {
-    // Software SPI write with bit banging.
-    for(uint8_t bit = 0x80; bit; bit >>= 1) {
-      VPORT1_OUT &= ~_BV(5);
-      if(d & bit) VPORT1_OUT |= _BV(7);
-      else        VPORT1_OUT &= ~_BV(7);;
-      _delay_us(1);
-      VPORT1_OUT |= _BV(5);
-      _delay_us(1);
-    }
+static void pcdspiwrite(uint8_t d)
+{
+	// Software SPI write with bit banging.
+	for(uint8_t bit = 0x80; bit; bit >>= 1) {
+		VPORT1_OUT &= ~_BV(5);
+		if(d & bit) VPORT1_OUT |= _BV(7);
+		else        VPORT1_OUT &= ~_BV(7);;
+		_delay_us(1);
+		VPORT1_OUT |= _BV(5);
+		_delay_us(1);
+	}
 }
 
-static void command(uint8_t c) {
-  VPORT1_OUT &= ~_BV(6); // D/C
-  VPORT1_OUT &= ~_BV(4); // CS
-  pcdspiwrite(c);
-  VPORT1_OUT |= _BV(4); // CS
+static void command(uint8_t c)
+{
+	VPORT1_OUT &= ~_BV(6); // D/C
+	VPORT1_OUT &= ~_BV(4); // CS
+	pcdspiwrite(c);
+	VPORT1_OUT |= _BV(4); // CS
 }
 
-static void data(uint8_t c) {
-  VPORT1_OUT |= _BV(6);
-  VPORT1_OUT &= ~_BV(4); // CS
-  pcdspiwrite(c);
-  VPORT1_OUT |= _BV(4); // CS
-}
-
-static void setContrast(uint8_t val) {
-  if (val > 0x7f) {
-    val = 0x7f;
-  }
-  command(PCD8544_FUNCTIONSET | PCD8544_EXTENDEDINSTRUCTION );
-  command( PCD8544_SETVOP | val);
-  command(PCD8544_FUNCTIONSET);
-}
-
-void pcd8544_display(void) {
-  uint8_t col, maxcol, p;
-
-  for(p = 0; p < 6; p++) {
-    // check if this page is part of update
-    if ( yUpdateMin >= ((p+1)*8) ) {
-      continue;   // nope, skip it!
-    }
-    if (yUpdateMax < p*8) {
-      break;
-    }
-
-
-
-    col = xUpdateMin;
-    maxcol = xUpdateMax;
-
-    command(PCD8544_SETXADDR | col);
-
-    VPORT1_OUT |= _BV(6); // data
-    VPORT1_OUT &= ~_BV(4); // CS
-    for(; col <= maxcol; col++) {
-      pcdspiwrite(pcd8544_buffer[(LCDWIDTH*p)+col]);
-    }
-    VPORT1_OUT |= _BV(4); // CS
-
-  }
-
-  command(PCD8544_SETYADDR );  // no idea why this is necessary but it is to finish the last byte?
-  xUpdateMin = LCDWIDTH - 1;
-  xUpdateMax = 0;
-  yUpdateMin = LCDHEIGHT-1;
-  yUpdateMax = 0;
-
-}
-
-void pcd8544_clear(void) {
-  memset(pcd8544_buffer, 0, LCDWIDTH*LCDHEIGHT/8);
-  updateBoundingBox(0, 0, LCDWIDTH-1, LCDHEIGHT-1);
+void pcd8544_clear(void)
+{
+	for (uint8_t yi=0; yi<6; yi++) {
+		command(PCD8544_SETYADDR | yi);
+		command(PCD8544_SETXADDR | 0);
+		VPORT1_OUT |= _BV(6); // data
+		VPORT1_OUT &= ~_BV(4); // CS
+		for(uint8_t xi=0; xi < 84; xi++) {
+			pcdspiwrite(0);
+		}
+		VPORT1_OUT |= _BV(4); // CS
+	}
+	command(PCD8544_SETYADDR );  // no idea why this is necessary but it is to finish the last byte?
 }
 
 /* Inverse bit order for our font to work. */
-static void pcdspiwrite_rev(uint8_t d) {
-    // Software SPI write with bit banging.
-    for(uint8_t bit = 1; bit; bit <<= 1) {
-      VPORT1_OUT &= ~_BV(5);
-      if(d & bit) VPORT1_OUT |= _BV(7);
-      else        VPORT1_OUT &= ~_BV(7);;
-      _delay_us(1);
-      VPORT1_OUT |= _BV(5);
-      _delay_us(1);
-    }
+static void pcdspiwrite_rev(uint8_t d)
+{
+	// Software SPI write with bit banging.
+	for(uint8_t bit = 1; bit; bit <<= 1) {
+		VPORT1_OUT &= ~_BV(5);
+		if(d & bit) VPORT1_OUT |= _BV(7);
+		else        VPORT1_OUT &= ~_BV(7);;
+		_delay_us(1);
+		VPORT1_OUT |= _BV(5);
+		_delay_us(1);
+	}
 }
 
 
@@ -208,38 +107,38 @@ void pcd8544_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, 
 {
 	uint8_t ye = y+h;
 	uint8_t we = x+w;
-	for (uint8_t yi=y;yi<ye;yi++) {
-                command(PCD8544_SETYADDR | yi);
-                command(PCD8544_SETXADDR | x);
+	for (uint8_t yi=y; yi<ye; yi++) {
+		command(PCD8544_SETYADDR | yi);
+		command(PCD8544_SETXADDR | x);
 
-                VPORT1_OUT |= _BV(6); // data
-                VPORT1_OUT &= ~_BV(4); // CS
-                for(uint8_t xi=x; xi < we; xi++) {
-                  pcdspiwrite_rev(pgm_read_byte(buffer));
-                  buffer++;
-                }
-                VPORT1_OUT |= _BV(4); // CS
+		VPORT1_OUT |= _BV(6); // data
+		VPORT1_OUT &= ~_BV(4); // CS
+		for(uint8_t xi=x; xi < we; xi++) {
+			pcdspiwrite_rev(pgm_read_byte(buffer));
+			buffer++;
+		}
+		VPORT1_OUT |= _BV(4); // CS
 	}
-  command(PCD8544_SETYADDR );  // no idea why this is necessary but it is to finish the last byte?
+	command(PCD8544_SETYADDR );  // no idea why this is necessary but it is to finish the last byte?
 }
 
 void pcd8544_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 {
 	uint8_t ye = y+h;
 	uint8_t we = x+w;
-	for (uint8_t yi=y;yi<ye;yi++) {
-                command(PCD8544_SETYADDR | yi);
-                command(PCD8544_SETXADDR | x);
+	for (uint8_t yi=y; yi<ye; yi++) {
+		command(PCD8544_SETYADDR | yi);
+		command(PCD8544_SETXADDR | x);
 
-                VPORT1_OUT |= _BV(6); // data
-                VPORT1_OUT &= ~_BV(4); // CS
-                for(uint8_t xi=x; xi < we; xi++) {
-                  pcdspiwrite_rev(*buffer);
-                  buffer++;
-                }
-                VPORT1_OUT |= _BV(4); // CS
+		VPORT1_OUT |= _BV(6); // data
+		VPORT1_OUT &= ~_BV(4); // CS
+		for(uint8_t xi=x; xi < we; xi++) {
+			pcdspiwrite_rev(*buffer);
+			buffer++;
+		}
+		VPORT1_OUT |= _BV(4); // CS
 	}
-  command(PCD8544_SETYADDR );  // no idea why this is necessary but it is to finish the last byte?
+	command(PCD8544_SETYADDR );  // no idea why this is necessary but it is to finish the last byte?
 }
 
 

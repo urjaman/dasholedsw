@@ -58,33 +58,69 @@ void pcd8544_init(void)
 	pcd8544_clear();
 }
 
-static void pcdspiwrite(uint8_t d)
+static void spi_command_start(void)
+{
+	VPORT1_OUT &= ~_BV(6); // D/C
+	VPORT1_OUT &= ~_BV(4); // CS
+}
+
+static void spi_write_put(uint8_t d)
 {
 	SPIC_DATA = d;
-	while (!(SPIC_STATUS & _BV(7)));
+	while (!(SPIC_STATUS & SPI_IF_bm));
+}
+
+static void spi_write_wait(void)
+{
+}
+
+static void spi_command_end(void)
+{
+	spi_write_wait();
+	VPORT1_OUT |= _BV(4); // CS
 }
 
 static void command(uint8_t c)
 {
-	VPORT1_OUT &= ~_BV(6); // D/C
-	VPORT1_OUT &= ~_BV(4); // CS
-	pcdspiwrite(c);
-	VPORT1_OUT |= _BV(4); // CS
+	spi_command_start();
+	spi_write_put(c);
+	spi_command_end();
 }
+
+static void spi_data_start(void)
+{
+	/* Flip Data Order (for our font) */
+	SPIC_CTRL = SPI_CTRL_DEFAULT | 0x20;
+	VPORT1_OUT |= _BV(6); // data
+	VPORT1_OUT &= ~_BV(4); // CS
+}
+
+static void spi_data_end(void)
+{
+	spi_write_wait();
+	VPORT1_OUT |= _BV(4); // CS
+	SPIC_CTRL = SPI_CTRL_DEFAULT;
+}
+
+static void spi_data_finish(void)
+{
+	command(PCD8544_SETYADDR);
+}
+
 
 void pcd8544_clear(void)
 {
 	for (uint8_t yi=0; yi<6; yi++) {
 		command(PCD8544_SETYADDR | yi);
 		command(PCD8544_SETXADDR | 0);
-		VPORT1_OUT |= _BV(6); // data
-		VPORT1_OUT &= ~_BV(4); // CS
+
+		spi_data_start();
 		for(uint8_t xi=0; xi < 84; xi++) {
-			pcdspiwrite(0);
+			spi_write_put(0);
 		}
-		VPORT1_OUT |= _BV(4); // CS
+		spi_data_end();
 	}
-	command(PCD8544_SETYADDR );  // no idea why this is necessary but it is to finish the last byte?
+	spi_data_finish();
 }
 
 void pcd8544_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
@@ -94,20 +130,16 @@ void pcd8544_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, 
 	for (uint8_t yi=y; yi<ye; yi++) {
 		command(PCD8544_SETYADDR | yi);
 		command(PCD8544_SETXADDR | x);
-		/* Flip Data Order (for our font) */
-		SPIC_CTRL = SPI_CTRL_DEFAULT | 0x20;
 
-		VPORT1_OUT |= _BV(6); // data
-		VPORT1_OUT &= ~_BV(4); // CS
+		spi_data_start();
 		for(uint8_t xi=x; xi < we; xi++) {
-			pcdspiwrite(pgm_read_byte(buffer));
+			spi_write_put(pgm_read_byte(buffer));
 			buffer++;
 		}
-		VPORT1_OUT |= _BV(4); // CS
-		SPIC_CTRL = SPI_CTRL_DEFAULT;
+		spi_data_end();
 
 	}
-	command(PCD8544_SETYADDR );  // no idea why this is necessary but it is to finish the last byte?
+	spi_data_finish();
 }
 
 void pcd8544_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
@@ -118,19 +150,14 @@ void pcd8544_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w,
 		command(PCD8544_SETYADDR | yi);
 		command(PCD8544_SETXADDR | x);
 
-		/* Flip Data Order (for our font) */
-		SPIC_CTRL = SPI_CTRL_DEFAULT | 0x20;
-
-		VPORT1_OUT |= _BV(6); // data
-		VPORT1_OUT &= ~_BV(4); // CS
+		spi_data_start();
 		for(uint8_t xi=x; xi < we; xi++) {
-			pcdspiwrite(*buffer);
+			spi_write_put(*buffer);
 			buffer++;
 		}
-		VPORT1_OUT |= _BV(4); // CS
-		SPIC_CTRL = SPI_CTRL_DEFAULT;
+		spi_data_end();
 	}
-	command(PCD8544_SETYADDR );  // no idea why this is necessary but it is to finish the last byte?
+	spi_data_finish();
 }
 
 

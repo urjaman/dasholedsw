@@ -183,6 +183,7 @@ void adc_init(void) {
 	ADCA_REFCTRL = ADC_BANDGAP_bm;
 	ADCA_PRESCALER = ADC_PRESCALER_DIV256_gc;
 	ADCA_SAMPCTRL = 2;
+	ADCA_CH0_CTRL = ADC_CH_INPUTMODE_SINGLEENDED_gc;
 	for (i=0;i<ADC_MUX_CNT;i++) {
 		adc_raw_values[i] = adc_single_read(i);
 		adc_raw_minv[i] = adc_raw_values[i];

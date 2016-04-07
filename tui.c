@@ -36,6 +36,11 @@ static void tui_draw_mainpage(uint8_t forced) {
 	lcd_gotoxy_dw(0, 4);
 	lcd_puts(buf);
 
+
+	adc_print_v(buf, adc_read_sb());
+	lcd_gotoxy_dw(0, 3);
+	lcd_puts(buf);
+
 }
 
 void tui_init(void) {

@@ -14,17 +14,27 @@ static uint8_t tui_force_draw;
 static uint8_t tui_next_refresh;
 static uint8_t tui_refresh_interval=TUI_DEFAULT_REFRESH_INTERVAL; // by default 1s
 
-
+extern uint16_t adc_avg_cnt;
 static void tui_draw_mainpage(uint8_t forced) {
 	tui_force_draw = 0;
 	if (!forced) {
 //		tui_refresh_interval = tui_update_refresh_interval();
 		tui_next_refresh = timer_get_5hz_cnt()+tui_refresh_interval;
 	}
-	lcd_gotoxy(0,0);
-	lcd_puts_dw_P(PSTR("Hello World!"));
-	lcd_gotoxy(0,2);
-	lcd_puts_big_P(PSTR("12.34V"));
+	lcd_clear();
+	uint8_t buf[10];
+	adc_print_v(buf, adc_read_mb());
+	lcd_gotoxy_dw(0,0);
+	lcd_puts_dw_P(PSTR("ADC CH0:"));
+	lcd_gotoxy_dw(0,1);
+	lcd_puts_big(buf);
+	luint2xstr(buf, timer_get());
+	lcd_gotoxy_dw(0, 5);
+	lcd_puts(buf);
+
+	luint2xstr(buf, adc_avg_cnt);
+	lcd_gotoxy_dw(0, 4);
+	lcd_puts(buf);
 
 }
 

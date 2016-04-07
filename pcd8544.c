@@ -1,6 +1,7 @@
 
 #include "main.h"
 #include "pcd8544.h"
+#include <string.h>
 
 #define PCD8544_POWERDOWN 0x04
 #define PCD8544_ENTRYMODE 0x02
@@ -108,20 +109,6 @@ static void spi_data_finish(void)
 }
 
 
-void pcd8544_clear(void)
-{
-	for (uint8_t yi=0; yi<6; yi++) {
-		command(PCD8544_SETYADDR | yi);
-		command(PCD8544_SETXADDR | 0);
-
-		spi_data_start();
-		for(uint8_t xi=0; xi < 84; xi++) {
-			spi_write_put(0);
-		}
-		spi_data_end();
-	}
-	spi_data_finish();
-}
 
 void pcd8544_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 {
@@ -161,3 +148,15 @@ void pcd8544_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w,
 }
 
 
+/* To minimize special case hw code, clear is done using only with the API
+ * functions :), though with special knowledge of our LCD size... */
+void pcd8544_clear(void)
+{
+	uint8_t buf[21];
+	memset(buf, 0, 21);
+	for (uint8_t y=0;y<6;y++) {
+		for (uint8_t x=0;x<84;x+=21) {
+			pcd8544_write_block(buf, x, y, 21, 1);
+		}
+	}
+}

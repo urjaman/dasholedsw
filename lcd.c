@@ -20,7 +20,14 @@ void lcd_gotoxy(uint8_t x, uint8_t y) {
 	if (y>=LCD_MAXY) y=0;
 	if (x>=LCD_MAXX) x=0;
 	lcdy = y;
-	lcdx = x*8;
+	lcdx = (x*8)+2;
+}
+
+void lcd_gotoxy_dw(uint8_t x, uint8_t y) {
+	if (y>=LCD_MAXY) y=0;
+	if (x>=LCD_DW_MAXX) x=0;
+	lcdy = y;
+	lcdx = x;
 }
 
 
@@ -77,32 +84,63 @@ static void lcd_putchar_big(unsigned char c)
         }
         pcd8544_write_block(buf,lcdx, lcdy, w*2,2);
         lcdx += w*2;
-        
 }
 
+static uint8_t lcd_dw_charw(uint8_t c)
+{
+	if (c < 0x20) c = 0x20;
+        uint8_t font_meta_b = pgm_read_byte(&(font_metadata[c-0x20]));
+	return DW(font_meta_b);
+}
+
+
+uint8_t lcd_strwidth(const unsigned char * str) {
+	uint8_t w = 0;
+	do {
+		if (*str) w += lcd_dw_charw(*str);
+		else return w;
+		str++;
+	} while(1);
+}
+
+uint8_t lcd_strwidth_P(PGM_P str) {
+	uint8_t w = 0;
+	do {
+		uint8_t c = pgm_read_byte(str);
+		if (c) w += lcd_dw_charw(c);
+		else return w;
+		str++;
+	} while(1);
+}
+
+/* big = 2x small, but dont tell the user ;) */
+uint8_t lcd_strwidth_big(const unsigned char * str) {
+	return lcd_strwidth(str)*2;
+}
+
+uint8_t lcd_strwidth_big_P(PGM_P str) {
+	return lcd_strwidth_P(str)*2;
+}
 
 void lcd_putchar(unsigned char c) {
-  lcd_putchar_(c,0);
+	lcd_putchar_(c,0);
 }
 
-
-
 void lcd_puts(const unsigned char * str) {
-start:
-	if (*str) lcd_putchar_(*str, 0);
-	else return;
-	str++;
-	goto start;
+	do {
+		if (*str) lcd_putchar_(*str, 0);
+		else return;
+		str++;
+	} while(1);
 }
 
 void lcd_puts_P(PGM_P str) {
-	unsigned char c;
-start:
-	c = pgm_read_byte(str);
-	if (c) lcd_putchar_(c, 0);
-	else return;
-	str++;
-	goto start;
+	do {
+		uint8_t c = pgm_read_byte(str);
+		if (c) lcd_putchar_(c, 0);
+		else return;
+		str++;
+	} while (1);
 }
 
 void lcd_puts_dw(const unsigned char * str) {
@@ -134,8 +172,6 @@ start:
 	goto start;
 }
 
-
-
 void lcd_puts_big(const unsigned char * str) {
 start:
 	if (*str) lcd_putchar_big(*str);
@@ -143,3 +179,4 @@ start:
 	str++;
 	goto start;
 }
+

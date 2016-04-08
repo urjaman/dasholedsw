@@ -5,6 +5,14 @@
 
 #define BTNS (_BV(4)|_BV(5)|_BV(6)|_BV(7))
 
+/* Actually installed buttons: */
+#define BUTMODE 1
+
+/* Modes: */
+/* 1 button: short press: next, long press: ok */
+/* 2 buttons: buttons are next and prev, both are ok */
+/* 3+ buttons: as-is. */
+
 void buttons_init(void) {
 }
 
@@ -24,10 +32,25 @@ uint8_t buttons_get(void) {
 		uint8_t sv;
 		timer_delay_ms(32);
 		sv = buttons_get_v();
-		if (sv == v){
-			return v;
+		if (sv == v) {
+			break;
 		}
 		v = sv;
 	}
+#if (BUTMODE == 1)
+	/* Button debounced, now determine long or short. */
+	uint8_t lngcnt=0;
+	if (v==BUTTON_NEXT) while (buttons_get_v() == v) {
+		timer_delay_ms(50);
+		lngcnt++;
+		if (lngcnt >= 10) {
+			v = BUTTON_OK;
+			break;
+		}
+	}
+#elif (BUTMODE == 2)
+	if (v==(BUTTON_NEXT|BUTTON_PREV)) v = BUTTON_OK;
+#endif
+	return v;
 }
 

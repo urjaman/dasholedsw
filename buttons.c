@@ -41,16 +41,21 @@ uint8_t buttons_get(void) {
 	/* Button debounced, now determine long or short. */
 	uint8_t lngcnt=0;
 	if (v==BUTTON_NEXT) while (buttons_get_v() == v) {
-		timer_delay_ms(50);
+		timer_delay_ms(10);
 		lngcnt++;
-		if (lngcnt >= 10) {
+		if (lngcnt >= 50) {
 			v = BUTTON_OK;
 			break;
 		}
 	}
+	if (v==BUTTON_NEXT) timer_delay_ms(25); /* Debounce */
 #elif (BUTMODE == 2)
 	if (v==(BUTTON_NEXT|BUTTON_PREV)) v = BUTTON_OK;
 #endif
 	return v;
 }
 
+/* Returns how many actual buttons installed, as a hint for better UI. */
+uint8_t buttons_hw_count(void) {
+	return BUTMODE;
+}

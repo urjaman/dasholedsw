@@ -67,12 +67,19 @@ static void spi_command_start(void)
 
 static void spi_write_put(uint8_t d)
 {
+	uint8_t dummy = SPIC_STATUS;
 	SPIC_DATA = d;
-	while (!(SPIC_STATUS & SPI_IF_bm));
+	if (SPIC_STATUS & SPI_WRCOL_bm) {
+		while (!(SPIC_STATUS & SPI_IF_bm));
+		SPIC_DATA = d;
+	}
+	(void)dummy;
 }
 
 static void spi_write_wait(void)
 {
+	while (!(SPIC_STATUS & SPI_IF_bm));
+
 }
 
 static void spi_command_end(void)

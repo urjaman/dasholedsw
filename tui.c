@@ -15,6 +15,9 @@ static uint8_t tui_next_refresh;
 static uint8_t tui_refresh_interval=TUI_DEFAULT_REFRESH_INTERVAL; // by default 1s
 
 extern uint16_t adc_avg_cnt;
+static uint8_t prev_k = 0;
+
+
 static void tui_draw_mainpage(uint8_t forced) {
 	tui_force_draw = 0;
 	if (!forced) {
@@ -25,8 +28,6 @@ static void tui_draw_mainpage(uint8_t forced) {
 	uint8_t buf[10];
 	adc_print_v(buf, adc_read_mb());
 	lcd_gotoxy_dw(0,0);
-	lcd_puts_dw_P(PSTR("ADC CH0:"));
-	lcd_gotoxy_dw(0,1);
 	lcd_puts_big(buf);
 	luint2xstr(buf, timer_get());
 	lcd_gotoxy_dw(0, 5);
@@ -36,6 +37,9 @@ static void tui_draw_mainpage(uint8_t forced) {
 	lcd_gotoxy_dw(0, 4);
 	lcd_puts(buf);
 
+	buf[0] = prev_k + '0'; buf[1] = 0;
+	lcd_gotoxy_dw(0,2);
+	lcd_puts(buf);
 
 	adc_print_v(buf, adc_read_sb());
 	lcd_gotoxy_dw(0, 3);
@@ -50,6 +54,10 @@ void tui_init(void) {
 
 void tui_run(void) {
 	uint8_t k = buttons_get();
+	if ((prev_k != k)&&(k)) {
+		prev_k = k;
+		tui_force_draw = 1;
+	}
 	if (tui_force_draw) {
 		tui_draw_mainpage(tui_force_draw);
 		return;

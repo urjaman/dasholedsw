@@ -42,3 +42,8 @@ void lcd_puts_big_P(PGM_P str);
 
 uint8_t lcd_strwidth_big(const unsigned char*str);
 uint8_t lcd_strwidth_big_P(PGM_P str);
+
+/* Dynwidth "gfx" functions. */
+void lcd_clear_dw(uint8_t w);
+void lcd_write_dwb(uint8_t *buf, uint8_t w);
+void lcd_clear_eol(void);

@@ -56,7 +56,8 @@ void pcd8544_init(void)
 
 	// Set display to Normal
 	command(PCD8544_DISPLAYCONTROL | PCD8544_DISPLAYNORMAL);
-	pcd8544_clear();
+
+	pcd8544_clear_block(0, 0, LCDWIDTH, LCDHEIGHT/8);
 }
 
 static void spi_command_start(void)
@@ -154,16 +155,11 @@ void pcd8544_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w,
 	spi_data_finish();
 }
 
-
-/* To minimize special case hw code, clear is done using only with the API
- * functions :), though with special knowledge of our LCD size... */
-void pcd8544_clear(void)
+void pcd8544_clear_block(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 {
-	uint8_t buf[21];
-	memset(buf, 0, 21);
-	for (uint8_t y=0;y<6;y++) {
-		for (uint8_t x=0;x<84;x+=21) {
-			pcd8544_write_block(buf, x, y, 21, 1);
-		}
+	uint8_t buf[w];
+	memset(buf, 0, w);
+	for (uint8_t yi=y;yi<(y+h);yi++) {
+		pcd8544_write_block(buf, x, yi, w, 1);
 	}
 }

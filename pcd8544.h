@@ -12,5 +12,7 @@ void pcd8544_clear(void);
 
 void pcd8544_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 void pcd8544_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+void pcd8544_clear_block(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+
 
 #endif

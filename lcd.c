@@ -32,7 +32,23 @@ void lcd_gotoxy_dw(uint8_t x, uint8_t y) {
 
 
 void lcd_clear(void) {
-	pcd8544_clear();
+	pcd8544_clear_block(0, 0, LCDWIDTH, LCDHEIGHT/8);
+}
+
+void lcd_clear_dw(uint8_t w) {
+	pcd8544_clear_block(lcdx, lcdy, w, 1);
+	lcdx += w;
+}
+
+void lcd_clear_eol(void) {
+	lcd_clear_dw(LCDWIDTH - lcdx);
+	lcdx = 0;
+	lcdy++;
+}
+
+void lcd_write_dwb(uint8_t *buf, uint8_t w) {
+        pcd8544_write_block(buf, lcdx, lcdy, w, 1);
+	lcdx += w;
 }
 
 #include "mfont8x8.c"

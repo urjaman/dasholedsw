@@ -1,7 +1,7 @@
 # AVR-GCC Makefile
 PROJECT=minivlcd
-SOURCES=main.c uart.c console.c lib.c appdb.c commands.c lcd.c timer.c backlight.c buttons.c adc.c relay.c tui.c cron.c pcd8544.c
-DEPS=Makefile buttons.h main.h cron.h uart.h pcd8544.h
+SOURCES=main.c uart.c console.c lib.c appdb.c commands.c lcd.c timer.c backlight.c buttons.c adc.c relay.c tui.c cron.c pcd8544.c tui-lib.c
+DEPS=Makefile buttons.h main.h cron.h uart.h pcd8544.h tui-lib.h
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 MMCU=atxmega32e5

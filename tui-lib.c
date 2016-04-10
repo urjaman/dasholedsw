@@ -55,7 +55,8 @@ int32_t tui_gen_menupart(unsigned char* buf, printval_func_t *printer, int32_t m
 	int8_t brackpos = -1;
 	PGM_P idstr = PSTR("> ");
 	uint8_t idw = lcd_strwidth_P(idstr);
-	const uint8_t brackl = LCD_MAXY - 1;
+	const uint32_t entries = ((max-min)+1)/step;
+	const uint8_t brackl = entries < (LCD_MAXY-1) ? entries : LCD_MAXY - 1;
 	if (listmenu) {
 		/* Enable a list-like menu */
 		if (LCD_MAXY>2) {
@@ -80,12 +81,7 @@ int32_t tui_gen_menupart(unsigned char* buf, printval_func_t *printer, int32_t m
 				buf[sl] = 0;
 				lcd_puts_dw(buf);
 				lcd_clear_eol();
-				if ((vidx+step) > max) break;
 				vidx += step;
-			}
-			for (;bp<brackl;bp++) {
-				lcd_gotoxy_dw(0, bp+1);
-				lcd_clear_eol();
 			}
 			if (brackpos) { /* Then the entries before our current position */
 				vidx = idx - step;
@@ -110,22 +106,45 @@ int32_t tui_gen_menupart(unsigned char* buf, printval_func_t *printer, int32_t m
 			lcd_clear_eol();
 			if (lbm) {
 				lcd_gotoxy_dw(0,2);
-				lcd_puts_dw_P(lbm==2?"DIR: NEXT":"DIR: PREV");
+				lcd_puts_dw_P(lbm==2?PSTR("DIR: NEXT"):PSTR("DIR: PREV"));
 				lcd_clear_eol();
 			}
 		}
-
+		if (lbm) timer_delay_ms(100);
 		if (delay) timer_delay_ms(delay);
 		uint8_t key = tui_waitforkey();
-		if ((lbm==1)&&(key==BUTTON_NEXT)) key = BUTTON_PREV;
+		if ((lbm==1)&&(key&BUTTON_NEXT)) key = BUTTON_PREV;
 		switch (key) {
 			case BUTTON_NEXT:
-				if ((idx+step) > max) idx = min;
-				else idx += step;
+				if ((idx+step) > max) {
+					idx = min;
+					if (brackpos>=0) brackpos = 0;
+				} else {
+					idx += step;
+					if (brackpos>=0) {
+						brackpos++;
+						if ((idx+step)>max) {
+							if (brackpos >= brackl) brackpos = brackl-1;
+						} else {
+							if (brackpos >= brackl-1) brackpos = brackl-2;
+						}
+					}
+				}
 				break;
 			case BUTTON_PREV:
-				if ((idx-step) < min) idx = max;
-				else idx -= step;
+				if ((idx-step) < min) {
+					idx = max;
+					if (brackpos >= 0) brackpos = brackl -1;
+				} else {
+					idx -= step;
+					if (brackpos >= 0) {
+						if ((idx-step) < min) {
+							if (brackpos) brackpos--;
+						} else {
+							if (brackpos>1) brackpos--;
+						}
+					}
+				}
 				break;
 			case BUTTON_OK:
 				if (lbm==2) {

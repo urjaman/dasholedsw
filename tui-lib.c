@@ -109,7 +109,10 @@ int32_t tui_gen_menupart(unsigned char* buf, printval_func_t *printer, int32_t m
 				lcd_clear_eol();
 			}
 		}
-		if (lbm) timer_delay_ms(100);
+		if (lbm) {
+			timer_delay_ms(180);
+			timer_delay_ms(100);
+		}
 		if (delay) timer_delay_ms(delay);
 		uint8_t key = tui_waitforkey();
 		if ((lbm==1)&&(key&BUTTON_NEXT)) key = BUTTON_PREV;

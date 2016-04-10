@@ -27,7 +27,11 @@ uint8_t buttons_get(void) {
 	uint8_t v = buttons_get_v();
 	if (!v) return 0;
 	backlight_activate();
+#if (BUTMODE == 1)
+	timer_delay_ms(100);
+#else
 	timer_delay_ms(180);
+#endif
 	for(;;) {
 		uint8_t sv;
 		timer_delay_ms(32);

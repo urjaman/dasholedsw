@@ -36,6 +36,9 @@ void lcd_clear(void) {
 }
 
 void lcd_clear_dw(uint8_t w) {
+	if ((lcdx+w)>LCDWIDTH) {
+		w = LCDWIDTH - lcdx;
+	}
 	pcd8544_clear_block(lcdx, lcdy, w, 1);
 	lcdx += w;
 }
@@ -47,6 +50,9 @@ void lcd_clear_eol(void) {
 }
 
 void lcd_write_dwb(uint8_t *buf, uint8_t w) {
+	if ((lcdx+w)>LCDWIDTH) {
+		w = LCDWIDTH - lcdx;
+	}
         pcd8544_write_block(buf, lcdx, lcdy, w, 1);
 	lcdx += w;
 }
@@ -68,6 +74,9 @@ static void lcd_putchar_(unsigned char c, uint8_t dw)
 	    block += XOFF(font_meta_b);
 	    w = DW(font_meta_b);
 	}
+	if ((lcdx+w)>LCDWIDTH) {
+		w = LCDWIDTH - lcdx;
+	}
         pcd8544_write_block_P(block,lcdx, lcdy, w,1);
         lcdx += w;
 }
@@ -82,6 +91,9 @@ static void lcd_putchar_big(unsigned char c)
         uint8_t font_meta_b = pgm_read_byte(&(font_metadata[c-0x20]));
 	uint8_t w = DW(font_meta_b);
         block += XOFF(font_meta_b);
+	if ((lcdx+(w*2))>LCDWIDTH) {
+		w = (LCDWIDTH - lcdx)/2;
+	}
         for (int i=0;i<w;i++) {
         	uint8_t d = pgm_read_byte(block);
         	block++;
@@ -98,6 +110,7 @@ static void lcd_putchar_big(unsigned char c)
         	buf[(w+i)*2] = lo;
         	buf[(w+i)*2+1] = lo;
         }
+
         pcd8544_write_block(buf,lcdx, lcdy, w*2,2);
         lcdx += w*2;
 }

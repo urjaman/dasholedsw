@@ -93,15 +93,15 @@ PGM_P const tui_rm_table[] PROGMEM = {
 
 static void tui_relaymenu(void) {
 	uint8_t sel;
-	sel = tui_gen_listmenu(PSTR("RELAY MODE:"), tui_rm_table, 3, relay_get_mode());
+	sel = tui_gen_listmenu(PSTR("RELAY MODE"), tui_rm_table, 3, relay_get_mode());
 	relay_set(sel);
 }
 
 
-const unsigned char tui_blsm_name[] PROGMEM = "DISPLAY CFG";
-const unsigned char tui_blsm_s1[] PROGMEM = "BL BRIGHTNESS";
-const unsigned char tui_blsm_s2[] PROGMEM = "BL DRV BRIGHT";
-const unsigned char tui_blsm_s3[] PROGMEM = "BL TIMEOUT";
+const unsigned char tui_blsm_name[] PROGMEM = "Disp. cfg";
+const unsigned char tui_blsm_s1[] PROGMEM = "Brightness";
+const unsigned char tui_blsm_s2[] PROGMEM = "Drv Bright";
+const unsigned char tui_blsm_s3[] PROGMEM = "Timeout";
 PGM_P const tui_blsm_table[] PROGMEM = { // BL Settings Menu
 	(PGM_P)tui_blsm_s1,
 	(PGM_P)tui_blsm_s2,
@@ -141,8 +141,8 @@ static void tui_blsettingmenu(void) {
 
 
 const unsigned char tui_sm_name[] PROGMEM = "SETTINGS";
-const unsigned char tui_sm_s1[] PROGMEM = "RLY VOLTTHRES";
-const unsigned char tui_sm_s2[] PROGMEM = "RLY AUTO KEEPON";
+const unsigned char tui_sm_s1[] PROGMEM = "Rly V.Thrs";
+const unsigned char tui_sm_s2[] PROGMEM = "Rly KeepOn";
 // BL Settings menu (3)
 
 // Exit Menu (4)
@@ -182,7 +182,7 @@ static void tui_settingsmenu(void) {
 	}
 }
 
-const unsigned char tui_mm_s1[] PROGMEM = "SET RELAY MODE";
+const unsigned char tui_mm_s1[] PROGMEM = "RELAY MODE";
 // Settings Menu (2)
 // Exit Menu (4)
 

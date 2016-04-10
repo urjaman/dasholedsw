@@ -38,8 +38,7 @@ void tui_gen_menuheader(PGM_P header) {
 	uint8_t banbwidth = (banw1 > banw2) ? banw1 : banw2;
 	uint8_t banner[banbwidth];
 
-	for (uint8_t i=0;i<banbwidth;i++) banner[i] = i&1?0x42:0x24;
-
+	for (uint8_t i=0;i<banbwidth;i++) banner[i] = i&1?0x89:0x91;
 	lcd_clear();
 	lcd_gotoxy(0,0);
 	lcd_write_dwb(banner, banw1);
@@ -245,7 +244,7 @@ PGM_P const tui_q_table[] PROGMEM = {
 };
 
 uint8_t tui_are_you_sure(void) {
-	return tui_gen_listmenu(PSTR("ARE YOU SURE?"), tui_q_table, 2, 0);
+	return tui_gen_listmenu(PSTR("Are you sure?"), tui_q_table, 2, 0);
 }
 
 

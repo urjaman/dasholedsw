@@ -28,34 +28,47 @@
 
 static void command(uint8_t c);
 
-void pcd8544_init(void)
+static void pcd8544_setup(void)
 {
 	const uint8_t contrast = 40;
 	const uint8_t bias = 4;
-	VPORT1_OUT |= _BV(5);
+
 	// toggle RST low to reset
 	VPORT1_OUT &= ~_BV(3);
 	_delay_us(500);
 	VPORT1_OUT |= _BV(3);
 
+	// get into the EXTENDED mode!
+	command(PCD8544_FUNCTIONSET | PCD8544_EXTENDEDINSTRUCTION );
+	// LCD bias select (4 is optimal?)
+	command(PCD8544_SETBIAS | bias);
+	command(PCD8544_SETVOP | contrast); // Experimentally determined
+	command(PCD8544_SETTEMP | 3);
+	// normal mode
+	command(PCD8544_FUNCTIONSET);
+	// Set display to Normal
+	command(PCD8544_DISPLAYCONTROL | PCD8544_DISPLAYINVERTED);
+}
+
+void pcd8544_contrast(uint8_t c) {
+	return;
+	// get into the EXTENDED mode!
+	command(PCD8544_FUNCTIONSET | PCD8544_EXTENDEDINSTRUCTION );
+	command( PCD8544_SETVOP | c); // Experimentally determined
+	// normal mode
+	command(PCD8544_FUNCTIONSET);
+}
+
+void pcd8544_init(void)
+{
 	SPIC_INTCTRL = 0;
 	SPIC_CTRL = SPI_CTRL_DEFAULT;
 	SPIC_CTRLB = 0x04; /* SSD */
 
-	// get into the EXTENDED mode!
-	command(PCD8544_FUNCTIONSET | PCD8544_EXTENDEDINSTRUCTION );
-
-	// LCD bias select (4 is optimal?)
-	command(PCD8544_SETBIAS | bias);
-
-	command( PCD8544_SETVOP | contrast); // Experimentally determined
+	VPORT1_OUT |= _BV(5);
 
 
-	// normal mode
-	command(PCD8544_FUNCTIONSET);
-
-	// Set display to Normal
-	command(PCD8544_DISPLAYCONTROL | PCD8544_DISPLAYNORMAL);
+	pcd8544_setup();
 
 	pcd8544_clear_block(0, 0, LCDWIDTH, LCDHEIGHT/8);
 }
@@ -122,6 +135,7 @@ void pcd8544_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, 
 {
 	uint8_t ye = y+h;
 	uint8_t we = x+w;
+//	pcd8544_setup();
 	for (uint8_t yi=y; yi<ye; yi++) {
 		command(PCD8544_SETYADDR | yi);
 		command(PCD8544_SETXADDR | x);
@@ -141,6 +155,7 @@ void pcd8544_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w,
 {
 	uint8_t ye = y+h;
 	uint8_t we = x+w;
+//	pcd8544_setup();
 	for (uint8_t yi=y; yi<ye; yi++) {
 		command(PCD8544_SETYADDR | yi);
 		command(PCD8544_SETXADDR | x);

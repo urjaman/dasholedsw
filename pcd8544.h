@@ -15,4 +15,6 @@ void pcd8544_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w,
 void pcd8544_clear_block(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 
 
+void pcd8544_contrast(uint8_t c);
+
 #endif

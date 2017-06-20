@@ -8,6 +8,7 @@
 #include "backlight.h"
 #include "tui.h"
 #include "tui-lib.h"
+#include "pcd8544.h"
 
 #define TUI_DEFAULT_REFRESH_INTERVAL 5
 
@@ -30,7 +31,11 @@ static void tui_draw_mainpage(uint8_t forced) {
 	adc_print_v(buf, adc_read_mb());
 	lcd_gotoxy_dw(0,0);
 	lcd_puts_big(buf);
-	luint2xstr(buf, timer_get());
+
+	static uint8_t ct = 40;
+	pcd8544_contrast(++ct);
+	luint2str(buf, ct);
+	if (ct == 50) ct = 29;
 	lcd_gotoxy_dw(0, 5);
 	lcd_puts(buf);
 
@@ -38,7 +43,7 @@ static void tui_draw_mainpage(uint8_t forced) {
 	lcd_gotoxy_dw(0, 4);
 	lcd_puts(buf);
 
-	buf[0] = prev_k + '0'; buf[1] = 0;
+	buf[0] = prev_k + '0'; buf[1] = 'K'; buf[2] = 0;
 	lcd_gotoxy_dw(0,2);
 	lcd_puts(buf);
 

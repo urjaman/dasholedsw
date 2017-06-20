@@ -7,7 +7,7 @@ OBJCOPY=avr-objcopy
 MMCU=atxmega32e5
 #AVRBINDIR=~/avr-tools/bin/
 AVRDUDEMCU=x32e5
-AVRDUDECMD=sudo avrdude -p $(AVRDUDEMCU) -c avrispmkII -P usb
+AVRDUDECMD=avrdude -p $(AVRDUDEMCU) -c atmelice_pdi
 DFLAGS=
 CFLAGS=-mmcu=$(MMCU) -Os -g -Wall -W -pipe -mcall-prologues -std=gnu99 -Wno-main $(DFLAGS)
 
@@ -32,7 +32,7 @@ objdump: $(PROJECT).out
 	$(AVRBINDIR)avr-objdump -xd $(PROJECT).out | less
 
 program: $(PROJECT).hex
-	cp $(PROJECT).hex /tmp && cd /tmp && $(AVRBINDIR)$(AVRDUDECMD) -U flash:w:$(PROJECT).hex
+	$(AVRBINDIR)$(AVRDUDECMD) -U flash:w:$(PROJECT).hex
 
 
 size: $(PROJECT).out

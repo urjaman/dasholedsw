@@ -6,14 +6,13 @@
 #include <util/delay.h>
 
 #include "lcd.h"
-#include "pcd8544.h"
 
 static uint8_t lcdx, lcdy;
 
 void
 lcd_init(void)
 {
-	pcd8544_init();
+	dp_init();
 }
 
 void lcd_gotoxy(uint8_t x, uint8_t y) {
@@ -32,14 +31,14 @@ void lcd_gotoxy_dw(uint8_t x, uint8_t y) {
 
 
 void lcd_clear(void) {
-	pcd8544_clear_block(0, 0, LCDWIDTH, LCDHEIGHT/8);
+	dp_clear_block(0, 0, LCDWIDTH, LCDHEIGHT/8);
 }
 
 void lcd_clear_dw(uint8_t w) {
 	if ((lcdx+w)>LCDWIDTH) {
 		w = LCDWIDTH - lcdx;
 	}
-	pcd8544_clear_block(lcdx, lcdy, w, 1);
+	dp_clear_block(lcdx, lcdy, w, 1);
 	lcdx += w;
 }
 
@@ -53,7 +52,7 @@ void lcd_write_dwb(uint8_t *buf, uint8_t w) {
 	if ((lcdx+w)>LCDWIDTH) {
 		w = LCDWIDTH - lcdx;
 	}
-        pcd8544_write_block(buf, lcdx, lcdy, w, 1);
+        dp_write_block(buf, lcdx, lcdy, w, 1);
 	lcdx += w;
 }
 
@@ -77,7 +76,7 @@ static void lcd_putchar_(unsigned char c, uint8_t dw)
 	if ((lcdx+w)>LCDWIDTH) {
 		w = LCDWIDTH - lcdx;
 	}
-        pcd8544_write_block_P(block,lcdx, lcdy, w,1);
+        dp_write_block_P(block,lcdx, lcdy, w,1);
         lcdx += w;
 }
 
@@ -110,8 +109,7 @@ static void lcd_putchar_big(unsigned char c)
         	buf[(w+i)*2] = lo;
         	buf[(w+i)*2+1] = lo;
         }
-
-        pcd8544_write_block(buf,lcdx, lcdy, w*2,2);
+        dp_write_block(buf,lcdx, lcdy, w*2,2);
         lcdx += w*2;
 }
 

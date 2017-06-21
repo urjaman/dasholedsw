@@ -4,8 +4,6 @@
 #include "relay.h"
 #include "backlight.h"
 
-/* In DispCombo backlight module will also handle contrast. */
-/* Contrast: PD5 OCOB */
 
 static uint8_t bl_drv_value;
 static uint8_t bl_value;
@@ -19,6 +17,7 @@ static int8_t bl_v_now;
 static int8_t bl_v_fadeto;
 
 void backlight_simple_set(int8_t v) {
+#if 0
 	if (v < 0) {
 		TCC4_CCABUF = 0;
 		VPORT1_DIR &= ~_BV(0);
@@ -35,9 +34,11 @@ void backlight_simple_set(int8_t v) {
 	VPORT1_DIR |= _BV(0);
 	TCC4_CCABUF = hwv;
 	bl_v_now = v;
+#endif
 }
 
 static void backlight_fader(void) {
+#if 0
 	if (bl_v_fadeto < bl_v_now) {
 		if (bl_v_now>1) {
 			uint16_t v1,v2;
@@ -61,16 +62,20 @@ static void backlight_fader(void) {
 ret:
 	if (bl_v_fadeto != bl_v_now) timer_set_waiting();
 	return;
-
+#endif
 }
 
 void backlight_init(void) {
+
 	const uint8_t backlight_default = 14;
 
 	TCC4_PER = 1023;
+	TCC4_CTRLA = TC45_CLKSEL_DIV1_gc;
+
+#if 0
 	TCC4_CTRLB = TC45_WGMODE_SINGLESLOPE_gc;
 	TCC4_CTRLE = TC45_CCAMODE_COMP_gc;
-	TCC4_CTRLA = TC45_CLKSEL_DIV1_gc;
+#endif
 
 	bl_to = 120;
 	backlight_set(backlight_default);

@@ -54,20 +54,24 @@ static void xmega_clocks(void) {
 
 /* VPORT0 = A, VPORT1 = C, VPORT2 = D, VPORT3 = R */
 static void xmega_pins(void) {
+#if 0
 	PORTCFG_MPCMASK = 0x03;
 	PORTR_PIN0CTRL = PORT_OPC_PULLUP_gc;
 
 	PORTCFG_MPCMASK = 0xFF;
 	PORTA_PIN0CTRL = PORT_ISC_INPUT_DISABLE_gc;
 
-	PORTCFG_MPCMASK = 0xFC;
-	PORTD_PIN0CTRL = PORT_OPC_PULLUP_gc;
 
 	VPORT1_OUT = 0x10;
 	VPORT1_DIR = 0xFF;
 
+#endif
+
+	PORTCFG_MPCMASK = 0xFC;
+	PORTD_PIN0CTRL = PORT_OPC_PULLUP_gc;
 	VPORT2_OUT = 0x08;
 	VPORT2_DIR = 0x0B;
+
 }
 
 void main(void) {

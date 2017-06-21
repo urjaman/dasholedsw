@@ -1,5 +1,4 @@
 #include "main.h"
-#include "pcd8544.h"
 #include "lcd.h"
 #include "buttons.h"
 #include "lib.h"

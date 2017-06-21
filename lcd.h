@@ -12,12 +12,13 @@
  */
 #include <avr/pgmspace.h>
 
-#include "pcd8544.h"
+#include "ssd1331.h"
 
 #define LCD_DW_MAXX LCDWIDTH
 
-#define LCD_MAXX 10
-#define LCD_MAXY 6
+#define LCD_MAXX (LCD_DW_MAXX/8)
+#define LCD_MAXY (LCDHEIGHT/8)
+
 void	lcd_init(void);
 void	lcd_putchar(unsigned char c);
 

@@ -60,6 +60,8 @@
 #define LCDWIDTH 96
 #define LCDHEIGHT 64
 
+#define LCD_CHARW 8
+
 /* dp = generic display */
 
 void dp_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h);

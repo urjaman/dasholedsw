@@ -57,6 +57,10 @@ int16_t adc_read_diff(void) {
 	return adc_bat_diff;
 }
 
+uint16_t adc_read_ch(uint8_t ch) {
+	return adc_values[ch];
+}
+
 uint16_t adc_read_minv(uint8_t ch) {
 	return adc_minv[ch];
 }

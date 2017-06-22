@@ -9,6 +9,8 @@
 #define ADC_CH_TEMP 1
 #define ADC_CH_BACKLIGHT 0
 
+uint16_t adc_read_ch(uint8_t ch);
+
 uint16_t adc_read_mb(void);
 uint16_t adc_read_sb(void);
 int16_t adc_read_diff(void);

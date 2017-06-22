@@ -98,10 +98,7 @@ int32_t tui_gen_adjmenu(PGM_P header, printval_func_t *printer, int32_t min, int
 	}
 }
 
-//Generic Exit Menu Item
-const unsigned char tui_exit_menu[] PROGMEM = "EXIT MENU";
-
-uint8_t tui_gen_listmenu(PGM_P header, PGM_P const menu_table[], const uint8_t entries, uint8_t start) {
+int tui_enh_listmenu(PGM_P header, listprint_func_t *printer, uint8_t entries, uint8_t start) {
 	tui_gen_menuheader(header);
 	uint8_t idx=start;
 	uint8_t scroll=0;
@@ -127,8 +124,7 @@ uint8_t tui_gen_listmenu(PGM_P header, PGM_P const menu_table[], const uint8_t e
 			lcd_gotoxy_dw(0, bp+1);
 			if (bp==vbp) lcd_puts_dw_P(idstr);
 			else lcd_clear_dw(idw);
-			lcd_puts_dw_P((PGM_P)pgm_read_word(&(menu_table[vi])));
-			lcd_clear_eol();
+			printer(vi);
 			vi++;
 		}
 		lcd_clear_eos();
@@ -151,14 +147,30 @@ uint8_t tui_gen_listmenu(PGM_P header, PGM_P const menu_table[], const uint8_t e
 				break;
 			case BUTTON_OK:
 				return idx;
-			case BUTTON_CANCEL: {
-					PGM_P last_entry = (PGM_P)pgm_read_word(&menu_table[entries-1]);
-					if (last_entry == (PGM_P)tui_exit_menu) return entries-1;
-					else return start;
-				}
-				break;
+			case BUTTON_CANCEL:
+				return -1;
 		}
 	}
+}
+
+static PGM_P const * tui_pgm_menu_table;
+static void tui_menu_table_printer(uint8_t idx) {
+	lcd_puts_dw_P((PGM_P)pgm_read_word(&(tui_pgm_menu_table[idx])));
+	lcd_clear_eol();
+}
+
+//Generic Exit Menu Item
+const unsigned char tui_exit_menu[] PROGMEM = "EXIT MENU";
+
+uint8_t tui_gen_listmenu(PGM_P header, PGM_P const menu_table[], const uint8_t entries, uint8_t start) {
+	tui_pgm_menu_table = menu_table;
+	int r = tui_enh_listmenu(header, tui_menu_table_printer, entries, start);
+	if (r<0) { // canceled
+		PGM_P last_entry = (PGM_P)pgm_read_word(&menu_table[entries-1]);
+		if (last_entry == (PGM_P)tui_exit_menu) return entries-1;
+		return start;
+	}
+	return r;
 }
 
 static uint8_t tui_voltmenu_printer(unsigned char* buf, int32_t val) {

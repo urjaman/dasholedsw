@@ -8,6 +8,7 @@
 #include "backlight.h"
 #include "tui.h"
 #include "tui-lib.h"
+#include "tui-mod.h"
 
 #define TUI_DEFAULT_REFRESH_INTERVAL 5
 
@@ -25,6 +26,7 @@ static void tui_draw_mainpage(uint8_t forced) {
 //		tui_refresh_interval = tui_update_refresh_interval();
 		tui_next_refresh = timer_get_5hz_cnt()+tui_refresh_interval;
 	}
+#if 0
 	lcd_gotoxy_dw(0,0);
 
 	uint8_t buf[10];
@@ -43,10 +45,14 @@ static void tui_draw_mainpage(uint8_t forced) {
 	luint2xstr(buf, adc_avg_cnt);
 	lcd_puts(buf);
 	lcd_clear_eos();
+#endif
+	tui_draw_mods();
+
 
 }
 
 void tui_init(void) {
+	lcd_clear();
 	tui_draw_mainpage(0);
 }
 
@@ -59,6 +65,7 @@ void tui_run(void) {
 	}
 	if (k==BUTTON_OK) {
 		tui_mainmenu();
+		lcd_clear();
 		tui_force_draw = 1;
 	}
 	if (tui_force_draw) {
@@ -142,6 +149,7 @@ const unsigned char tui_sm_name[] PROGMEM = "SETTINGS";
 const unsigned char tui_sm_s1[] PROGMEM = "Rly V.Thrs";
 const unsigned char tui_sm_s2[] PROGMEM = "Rly KeepOn";
 // BL Settings menu (3)
+const unsigned char tui_sm_s3[] PROGMEM = "TUI Modules";
 
 // Exit Menu (4)
 
@@ -150,13 +158,14 @@ PGM_P const tui_sm_table[] PROGMEM = { // Settings Menu
     (PGM_P)tui_sm_s1,
     (PGM_P)tui_sm_s2,
     (PGM_P)tui_blsm_name,
+    (PGM_P)tui_sm_s3,
     (PGM_P)tui_exit_menu
 };
 
 static void tui_settingsmenu(void) {
 	uint8_t sel = 0;
 	for(;;) {
-		sel = tui_gen_listmenu((PGM_P)tui_sm_name, tui_sm_table, 4, sel);
+		sel = tui_gen_listmenu((PGM_P)tui_sm_name, tui_sm_table, 5, sel);
 		switch (sel) {
 			case 0: {
 			uint16_t v = tui_gen_voltmenu((PGM_P)tui_sm_s1, relay_get_autovoltage());
@@ -172,6 +181,10 @@ static void tui_settingsmenu(void) {
 
 			case 2:
 			tui_blsettingmenu();
+			break;
+
+			case 3:
+			tui_modules_editor();
 			break;
 
 			default:

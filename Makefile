@@ -1,7 +1,7 @@
 # AVR-GCC Makefile
 PROJECT=minivlcd
-SOURCES=main.c uart.c console.c lib.c appdb.c commands.c lcd.c timer.c backlight.c buttons.c adc.c relay.c tui.c cron.c ssd1331.c tui-lib.c
-DEPS=Makefile buttons.h main.h cron.h uart.h tui-lib.h ssd1331.h
+SOURCES=main.c uart.c console.c lib.c appdb.c commands.c lcd.c timer.c backlight.c buttons.c adc.c relay.c tui.c cron.c ssd1331.c tui-lib.c tui-mod.c tui-modules.c
+DEPS=Makefile buttons.h main.h cron.h uart.h tui-lib.h ssd1331.h tui-mod.h
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 MMCU=atxmega32e5
@@ -17,13 +17,11 @@ $(PROJECT).hex: $(PROJECT).out
 	$(AVRBINDIR)$(OBJCOPY) -j .text -j .data -O ihex $(PROJECT).out $(PROJECT).hex
 
 $(PROJECT).out: $(SOURCES) timer-ll.o
+	./make_tuidb.sh tui-modules.c > tuidb_db.c
 	$(AVRBINDIR)$(CC) $(CFLAGS) -flto -fwhole-program -flto-partition=none -mrelax -I./ -o $(PROJECT).out  $(SOURCES) timer-ll.o -lc -lm
 
 timer-ll.o: timer-ll.c timer.c main.h
 	$(AVRBINDIR)$(CC) $(CFLAGS) -I./ -c -o timer-ll.o timer-ll.c
-
-#adc-ll.o: adc-ll.c adc.c main.h
-#	$(AVRBINDIR)$(CC) $(CFLAGS) -I./ -c -o adc-ll.o adc-ll.c
 
 asm: $(SOURCES)
 	$(AVRBINDIR)$(CC) -S $(CFLAGS) -I./ -o $(PROJECT).S $(SOURCES)

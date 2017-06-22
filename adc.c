@@ -4,13 +4,8 @@
 
 
 
-// Thus MB_SCALE = 3489,28 / 3515 * 65536 => 65056,45919
-#define ADC_MB_SCALE 65536
-// SB_SCALE = 3489,28 / 3507 * 65536 => 65204,86284
-#define ADC_SB_SCALE 65536
-
 // Calib is 65536+diff, thus saved is diff = calib - 65536.
-int16_t adc_calibration_diff[ADC_MUX_CNT] = { ADC_MB_SCALE-65536, ADC_SB_SCALE-65536 };
+int16_t adc_calibration_diff[ADC_MUX_CNT] = { 0, 0, 0, 0, 0 };
 
 static uint32_t adc_raw_values[ADC_MUX_CNT];
 static uint16_t adc_raw_minv[ADC_MUX_CNT];
@@ -30,7 +25,12 @@ uint16_t adc_avg_cnt=0;
 #define ADC_ZERO_LEVEL 205
 
 static void adc_set_mux(uint8_t c) {
-	ADCA_CH0_MUXCTRL = (4+c) << 3;
+	switch (c) {
+		case ADC_CH_R10V: c = 4; break;
+		case ADC_CH_MB: c = 7; break;
+		default: break;
+	}
+	ADCA_CH0_MUXCTRL = (c) << 3;
 }
 
 static uint16_t adc_single_read(uint8_t c) {
@@ -46,11 +46,11 @@ static uint16_t adc_single_read(uint8_t c) {
 }
 
 uint16_t adc_read_mb(void) {
-	return adc_values[0];
+	return adc_values[ADC_CH_MB];
 }
 
 uint16_t adc_read_sb(void) {
-	return adc_values[1];
+	return adc_values[ADC_CH_SB];
 }
 
 int16_t adc_read_diff(void) {
@@ -92,15 +92,13 @@ void adc_print_dV(unsigned char* buf, uint16_t v) {
 }
 
 static void adc_values_scale(uint32_t *raw, uint16_t *min, uint16_t *max) {
-	uint32_t adc_scale_mb = ( ((int32_t)65536L) + adc_calibration_diff[0] );
-	uint32_t adc_scale_sb = ( ((int32_t)65536L) + adc_calibration_diff[1] );
-	adc_values[0] = (((uint32_t)raw[0])*adc_scale_mb)/65536;
-	adc_values[1] = (((uint32_t)raw[1])*adc_scale_sb)/65536;
-	adc_minv[0] = (((uint32_t)min[0])*adc_scale_mb)/65536;
-	adc_minv[1] = (((uint32_t)min[1])*adc_scale_sb)/65536;
-	adc_maxv[0] = (((uint32_t)max[0])*adc_scale_mb)/65536;
-	adc_maxv[1] = (((uint32_t)max[1])*adc_scale_sb)/65536;
-	adc_bat_diff = adc_values[0] - adc_values[1];
+	for (uint8_t i=0;i<ADC_MUX_CNT;i++) {
+		uint32_t adc_scale = ( ((int32_t)65536L) + adc_calibration_diff[i] );
+		adc_values[i] = (((uint32_t)raw[i])*adc_scale)/65536;
+		adc_minv[i] = (((uint32_t)min[i])*adc_scale)/65536;
+		adc_maxv[i] = (((uint32_t)max[i])*adc_scale)/65536;
+	}
+	adc_bat_diff = adc_values[ADC_CH_MB] - adc_values[ADC_CH_SB];
 }
 
 static void adc_ll_init(void) {
@@ -146,7 +144,10 @@ static void adc_ll_run(void) {
 ISR(ADCA_CH0_vect) {
 	uint8_t this_ch = adc_ss_ch;
 	if (++adc_ss_cnt >= 16) {
-		adc_set_mux(adc_ss_ch ^= 1);
+		uint8_t next_ch = this_ch + 1;
+		if (next_ch>=ADC_MUX_CNT) next_ch = 0;
+		adc_ss_ch = next_ch;
+		adc_set_mux(next_ch);
 		adc_ss_cnt = 0;
 	}
 	ADCA_CTRLA = 0x05;

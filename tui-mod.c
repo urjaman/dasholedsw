@@ -66,6 +66,7 @@ static uint8_t tui_edit_mod(uint8_t idx) {
 	ps = (void*)pgm_read_ptr(&(dbptr->parselect));
 	uint8_t par = mods[idx].par;
 	if ((r=ps(mods[idx].par))<0) return 1;
+	uint8_t lbm = buttons_hw_count()==1?1:0;
 	par = r;
 	uint8_t wh = pgm_read_byte(&(dbptr->width));
 	uint8_t lc = pgm_read_byte(&(dbptr->lines));
@@ -126,6 +127,7 @@ static uint8_t tui_edit_mod(uint8_t idx) {
 			rdl = 0;
 			k = tui_waitforkey();
 		}
+		if ((lbm)&&(dir!=3)&&(k==BUTTON_OK)) k = BUTTON_PREV;
 		pk = k;
 		switch (k) {
 			case BUTTON_OK:
@@ -146,7 +148,7 @@ static uint8_t tui_edit_mod(uint8_t idx) {
 				break;
 			case BUTTON_PREV: {
 				PGM_P dn;
-	 			dir = (dir+1) & 3;
+				dir = (dir+1) & 3;
 				switch (dir) {
 					case 0: dn = PSTR(" DIR: RIGHT "); break;
 					case 1: dn = PSTR(" DIR: DOWN "); break;

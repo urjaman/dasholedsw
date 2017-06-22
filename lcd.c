@@ -48,6 +48,17 @@ void lcd_clear_eol(void) {
 	lcdy++;
 }
 
+void lcd_clear_big_eol(void) {
+	dp_clear_block(lcdx, lcdy, LCDWIDTH - lcdx, 2);
+	lcdx = 0;
+	lcdy += 2;
+}
+
+void lcd_clear_eos(void) {
+	while (lcdy < LCD_MAXY) lcd_clear_eol();
+	lcdy = 0;
+}
+
 void lcd_write_dwb(uint8_t *buf, uint8_t w) {
 	if ((lcdx+w)>LCDWIDTH) {
 		w = LCDWIDTH - lcdx;

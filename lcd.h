@@ -47,4 +47,10 @@ uint8_t lcd_strwidth_big_P(PGM_P str);
 /* Dynwidth "gfx" functions. */
 void lcd_clear_dw(uint8_t w);
 void lcd_write_dwb(uint8_t *buf, uint8_t w);
-void lcd_clear_eol(void);
+
+/* Nice things to finish with :) */
+void lcd_clear_eol(void); /* clear to end of line */
+void lcd_clear_eos(void); /* clear to end of screen */
+
+void lcd_clear_big_eol(void); /* clear to end of big line */
+

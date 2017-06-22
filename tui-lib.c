@@ -36,8 +36,7 @@ void tui_gen_menuheader(PGM_P header) {
 	uint8_t banner[LCDWIDTH/2];
 
 	for (uint8_t i=0;i<LCDWIDTH/2;i++) banner[i] = i&1?0x89:0x91;
-	lcd_clear();
-	lcd_gotoxy(0,0);
+	lcd_gotoxy_dw(0,0);
 	lcd_write_dwb(banner, banw1);
 	lcd_clear_dw(clrw1);
 	lcd_puts_dw_P(header);
@@ -64,6 +63,9 @@ int32_t tui_gen_adjmenu(PGM_P header, printval_func_t *printer, int32_t min, int
 			lcd_gotoxy_dw(0,2);
 			lcd_puts_dw_P(lbm==2?PSTR("DIR: NEXT"):PSTR("DIR: PREV"));
 			lcd_clear_eol();
+		}
+		lcd_clear_eos();
+		if (lbm) {
 			timer_delay_ms(180);
 			timer_delay_ms(100);
 		}
@@ -129,6 +131,7 @@ uint8_t tui_gen_listmenu(PGM_P header, PGM_P const menu_table[], const uint8_t e
 			lcd_clear_eol();
 			vi++;
 		}
+		lcd_clear_eos();
 		timer_delay_ms(50);
 		uint8_t key = tui_waitforkey();
 		switch (key) {

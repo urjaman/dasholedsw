@@ -25,30 +25,24 @@ static void tui_draw_mainpage(uint8_t forced) {
 //		tui_refresh_interval = tui_update_refresh_interval();
 		tui_next_refresh = timer_get_5hz_cnt()+tui_refresh_interval;
 	}
-	lcd_clear();
+	lcd_gotoxy_dw(0,0);
+
 	uint8_t buf[10];
 	adc_print_v(buf, adc_read_mb());
-	lcd_gotoxy_dw(0,0);
 	lcd_puts_big(buf);
-
-//	static uint8_t ct = 40;
-//	pcd8544_contrast(++ct);
-//	luint2str(buf, ct);
-//	if (ct == 50) ct = 29;
-//	lcd_gotoxy_dw(0, 5);
-//	lcd_puts(buf);
-
-	luint2xstr(buf, adc_avg_cnt);
-	lcd_gotoxy_dw(0, 4);
-	lcd_puts(buf);
+	lcd_clear_big_eol();
 
 	buf[0] = prev_k + '0'; buf[1] = 'K'; buf[2] = 0;
-	lcd_gotoxy_dw(0,2);
 	lcd_puts(buf);
+	lcd_clear_eol();
 
 	adc_print_v(buf, adc_read_sb());
-	lcd_gotoxy_dw(0, 3);
 	lcd_puts(buf);
+	lcd_clear_eol();
+
+	luint2xstr(buf, adc_avg_cnt);
+	lcd_puts(buf);
+	lcd_clear_eos();
 
 }
 

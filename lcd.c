@@ -19,7 +19,7 @@ void lcd_gotoxy(uint8_t x, uint8_t y) {
 	if (y>=LCD_MAXY) y=0;
 	if (x>=LCD_MAXX) x=0;
 	lcdy = y;
-	lcdx = (x*8)+2;
+	lcdx = (x*8);
 }
 
 void lcd_gotoxy_dw(uint8_t x, uint8_t y) {

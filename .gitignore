@@ -3,3 +3,4 @@
 *.hex
 *.o
 .bak/
+tuidb_db.c

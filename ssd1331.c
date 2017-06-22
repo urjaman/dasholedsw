@@ -126,6 +126,8 @@ uint16_t dp_get_color(uint8_t r, uint8_t g, uint8_t b)
 }
 #endif
 
+static uint8_t dp_last_bl = 0x07;
+
 void dp_init(void)
 {
 	// set pin directions
@@ -192,6 +194,20 @@ static uint16_t dp_fg=dp_get_color(0,0,255), dp_bg=dp_get_color(0,0,0);
 void dp_set_fg_bg(uint16_t fg, uint16_t bg) {
 	dp_fg = fg;
 	dp_bg = bg;
+}
+
+void dp_set_bl(uint8_t bl) {
+	if (!dp_last_bl) {
+		command(SSD1331_CMD_DISPLAYON);
+	}
+	if (bl>0x10) bl=0x10;
+	if (bl) {
+		command(SSD1331_CMD_MASTERCURRENT);
+		command(bl-1);
+	} else {
+		command(SSD1331_CMD_DISPLAYOFF);
+	}
+	dp_last_bl = bl;
 }
 
 void dp_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {

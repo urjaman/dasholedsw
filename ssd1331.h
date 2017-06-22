@@ -72,5 +72,8 @@ void dp_clear_block(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 //uint16_t dp_get_color(uint8_t r, uint8_t g, uint8_t b);
 void dp_set_fg_bg(uint16_t fg, uint16_t bg);
 
+#define DP_HAS_BL
+void dp_set_bl(uint8_t bl);
+
 void dp_init(void);
 

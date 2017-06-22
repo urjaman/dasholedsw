@@ -3,56 +3,27 @@
 #include "adc.h"
 #include "relay.h"
 #include "backlight.h"
-
+#include "lcd.h"
 
 static uint8_t bl_drv_value;
 static uint8_t bl_value;
 static uint8_t bl_to;
 static uint32_t bl_last_sec=0;
-const uint8_t backlight_values[17] PROGMEM = {
-	0, 1, 2, 3, 4, 8, 13, 21, 32, 45, 62, 83, 108, 137, 171, 210, 255
-};
 
 static int8_t bl_v_now;
 static int8_t bl_v_fadeto;
 
 void backlight_simple_set(int8_t v) {
-#if 0
-	if (v < 0) {
-		TCC4_CCABUF = 0;
-		VPORT1_DIR &= ~_BV(0);
-		// LCD OFF
-
-		bl_v_now = v;
-		return;
-	}
-	if (bl_v_now<0) {
-		// LCD ON
-	}
-	uint16_t hwv;
-	hwv = pgm_read_byte(&(backlight_values[v])) << 2;
-	VPORT1_DIR |= _BV(0);
-	TCC4_CCABUF = hwv;
-	bl_v_now = v;
+#ifdef DP_HAS_BL
+	dp_set_bl(v+1); // 0=off
 #endif
+	bl_v_now = v;
 }
 
 static void backlight_fader(void) {
-#if 0
 	if (bl_v_fadeto < bl_v_now) {
-		if (bl_v_now>1) {
-			uint16_t v1,v2;
-			v1 = pgm_read_byte(&(backlight_values[bl_v_now])) << 2;
-			v2 = pgm_read_byte(&(backlight_values[bl_v_now-1])) << 2;
-			v1 = ((v1-v2)/2)+v2;
-			TCC4_CCABUF = v1;
-			timer_delay_ms(25);
-			backlight_simple_set(bl_v_now-1);
-			timer_delay_ms(25);
-		} else {
-			backlight_simple_set(bl_v_now-1);
-			timer_delay_ms(50);
-		}
+		backlight_simple_set(bl_v_now-1);
+		timer_delay_ms(50);
 		goto ret;
 	}
 	if (bl_v_fadeto > bl_v_now) {
@@ -62,22 +33,14 @@ static void backlight_fader(void) {
 ret:
 	if (bl_v_fadeto != bl_v_now) timer_set_waiting();
 	return;
-#endif
 }
 
 void backlight_init(void) {
-
 	const uint8_t backlight_default = 14;
-
+	/* These are just obsolete stuff for timer to work...*/
 	TCC4_PER = 1023;
 	TCC4_CTRLA = TC45_CLKSEL_DIV1_gc;
-
-#if 0
-	TCC4_CTRLB = TC45_WGMODE_SINGLESLOPE_gc;
-	TCC4_CTRLE = TC45_CCAMODE_COMP_gc;
-#endif
-
-	bl_to = 120;
+	bl_to = 10;
 	backlight_set(backlight_default);
 	backlight_simple_set(backlight_default);
 	bl_v_fadeto = -1;

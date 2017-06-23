@@ -191,12 +191,14 @@ void dp_init(void)
 
 static uint16_t dp_fg=dp_get_color(0,0,255), dp_bg=dp_get_color(0,0,0);
 
-void dp_set_fg_bg(uint16_t fg, uint16_t bg) {
+void dp_set_fg_bg(uint16_t fg, uint16_t bg)
+{
 	dp_fg = fg;
 	dp_bg = bg;
 }
 
-void dp_set_bl(uint8_t bl) {
+void dp_set_bl(uint8_t bl)
+{
 	if (!dp_last_bl) {
 		command(SSD1331_CMD_DISPLAYON);
 	}
@@ -210,7 +212,8 @@ void dp_set_bl(uint8_t bl) {
 	dp_last_bl = bl;
 }
 
-void dp_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+void dp_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+{
 	set_drawbox(x,y*8,w,h*8);
 	for (uint8_t z=0; z<h; z++) {
 		for (uint8_t n=0x80; n; n = n >> 1) {
@@ -223,7 +226,8 @@ void dp_write_block(const uint8_t *buffer, uint8_t x, uint8_t y, uint8_t w, uint
 	}
 }
 
-void dp_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+void dp_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+{
 	set_drawbox(x,y*8,w,h*8);
 	for (uint8_t z=0; z<h; z++) {
 		for (uint8_t n=0x80; n; n = n >> 1) {
@@ -236,8 +240,9 @@ void dp_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, uint8
 	}
 }
 
-void dp_clear_block(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+void dp_clear_block(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+{
 	set_drawbox(x,y*8,w,h*8);
 	const uint16_t pixels = w*h*8;
-	for (uint16_t i=0;i<pixels;i++) pixel(dp_bg);
+	for (uint16_t i=0; i<pixels; i++) pixel(dp_bg);
 }

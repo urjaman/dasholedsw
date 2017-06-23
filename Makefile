@@ -1,7 +1,8 @@
 # AVR-GCC Makefile
 PROJECT=minivlcd
 SOURCES=main.c uart.c console.c lib.c appdb.c commands.c lcd.c timer.c backlight.c buttons.c adc.c relay.c tui.c cron.c ssd1331.c tui-lib.c tui-mod.c tui-modules.c
-DEPS=Makefile buttons.h main.h cron.h uart.h tui-lib.h ssd1331.h tui-mod.h
+HEADERS=buttons.h main.h cron.h uart.h tui-lib.h ssd1331.h tui-mod.h
+DEPS=Makefile $(HEADERS)
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 MMCU=atxmega32e5
@@ -46,4 +47,4 @@ backup:
 	$(AVRBINDIR)$(AVRDUDECMD) -U flash:r:backup.bin:r
 
 astyle:
-	astyle -A8 -t8 -xC110 -z2 -o -O $(SOURCES) $(HEADERS)
+	astyle -A8 -t8 -xC110 -S -z2 -o -O $(SOURCES) $(HEADERS)

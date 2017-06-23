@@ -9,16 +9,18 @@
 #include "lcd.h"
 
 int null_ps(uint8_t prv);
-int null_ps(uint8_t prv) {
+int null_ps(uint8_t prv)
+{
 	(void)prv;
 	return 0;
 }
 
-static void tui_modfinish(uint8_t*t, uint8_t ml, uint8_t x, uint8_t w) {
+static void tui_modfinish(uint8_t*t, uint8_t ml, uint8_t x, uint8_t w)
+{
 	t[ml] = 0;
 	uint8_t mw = lcd_strwidth(t);
 	if (mw > w) mw = w; // this is a problem, but i'll leave that for the mods to avoid,
-			   //  this just fixes math locally here :P
+	//  this just fixes math locally here :P
 	uint8_t cl = w - mw;
 	if ((x+w) >= LCDWIDTH) { // right align
 		lcd_clear_dw(cl);
@@ -29,7 +31,8 @@ static void tui_modfinish(uint8_t*t, uint8_t ml, uint8_t x, uint8_t w) {
 	}
 }
 
-static uint8_t tui_ch_char(uint8_t ch) {
+static uint8_t tui_ch_char(uint8_t ch)
+{
 	if (ch==ADC_CH_BACKLIGHT) return 'L';
 	if (ch==ADC_CH_TEMP) return 'T';
 	if (ch==ADC_CH_FUEL) return 'F';
@@ -44,22 +47,24 @@ static const unsigned char tui_adcch_s2[] PROGMEM = "FUEL";
 static const unsigned char tui_adcch_s3[] PROGMEM = "10V REF";
 static const unsigned char tui_adcch_s4[] PROGMEM = "INPUT VOLTS";
 static PGM_P const tui_adcch_table[] PROGMEM = {
-    (PGM_P)tui_adcch_s0,
-    (PGM_P)tui_adcch_s1,
-    (PGM_P)tui_adcch_s2,
-    (PGM_P)tui_adcch_s3,
-    (PGM_P)tui_adcch_s4,
-    (PGM_P)tui_exit_menu,
+	(PGM_P)tui_adcch_s0,
+	(PGM_P)tui_adcch_s1,
+	(PGM_P)tui_adcch_s2,
+	(PGM_P)tui_adcch_s3,
+	(PGM_P)tui_adcch_s4,
+	(PGM_P)tui_exit_menu,
 };
 
 int tui_adcsel(uint8_t par);
-int tui_adcsel(uint8_t par) {
+int tui_adcsel(uint8_t par)
+{
 	par = tui_gen_listmenu(PSTR("ADC CHANNEL"), tui_adcch_table, 6, par);
 	if (par >= 5) return -1;
 	return par;
 }
 
-static void tui_gbv_mod(uint8_t x, uint8_t c1, uint8_t c2, uint16_t v) {
+static void tui_gbv_mod(uint8_t x, uint8_t c1, uint8_t c2, uint16_t v)
+{
 	uint8_t mb[9];
 	mb[0] = c1;
 	mb[1] = c2;

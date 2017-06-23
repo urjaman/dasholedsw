@@ -20,7 +20,8 @@ extern uint16_t adc_avg_cnt;
 static uint8_t prev_k = 0;
 
 
-static void tui_draw_mainpage(uint8_t forced) {
+static void tui_draw_mainpage(uint8_t forced)
+{
 	tui_force_draw = 0;
 	if (!forced) {
 //		tui_refresh_interval = tui_update_refresh_interval();
@@ -51,13 +52,15 @@ static void tui_draw_mainpage(uint8_t forced) {
 
 }
 
-void tui_init(void) {
+void tui_init(void)
+{
 	lcd_clear();
 	tui_draw_mainpage(0);
 }
 
 
-void tui_run(void) {
+void tui_run(void)
+{
 	uint8_t k = buttons_get();
 	if ((prev_k != k)&&(k)) {
 		prev_k = k;
@@ -83,7 +86,8 @@ void tui_run(void) {
 }
 
 
-void tui_activate(void) {
+void tui_activate(void)
+{
 	tui_force_draw=1;
 }
 
@@ -91,12 +95,13 @@ const unsigned char tui_rm_s1[] PROGMEM = "OFF";
 const unsigned char tui_rm_s2[] PROGMEM = "ON";
 const unsigned char tui_rm_s3[] PROGMEM = "AUTO";
 PGM_P const tui_rm_table[] PROGMEM = {
-    (PGM_P)tui_rm_s1,
-    (PGM_P)tui_rm_s2,
-    (PGM_P)tui_rm_s3,
+	(PGM_P)tui_rm_s1,
+	(PGM_P)tui_rm_s2,
+	(PGM_P)tui_rm_s3,
 };
 
-static void tui_relaymenu(void) {
+static void tui_relaymenu(void)
+{
 	uint8_t sel;
 	sel = tui_gen_listmenu(PSTR("RELAY MODE"), tui_rm_table, 3, relay_get_mode());
 	relay_set(sel);
@@ -114,31 +119,32 @@ PGM_P const tui_blsm_table[] PROGMEM = { // BL Settings Menu
 	(PGM_P)tui_exit_menu
 };
 
-static void tui_blsettingmenu(void) {
+static void tui_blsettingmenu(void)
+{
 	uint8_t sel = 0;
 	for(;;) {
 		sel = tui_gen_listmenu((PGM_P)tui_blsm_name, tui_blsm_table, 4, sel);
 		switch (sel) {
 			case 0: {
-			uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s1, 0, 16, backlight_get());
-			backlight_set(v);
+				uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s1, 0, 16, backlight_get());
+				backlight_set(v);
 			}
 			break;
 
 			case 1: {
-			uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s2, 0, backlight_get(), backlight_get_dv());
-			backlight_set_dv(v);
+				uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s2, 0, backlight_get(), backlight_get_dv());
+				backlight_set_dv(v);
 			}
 			break;
 
 			case 2: {
-			uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s3, 1, 255, backlight_get_to());
-			backlight_set_to(v);
+				uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s3, 1, 255, backlight_get_to());
+				backlight_set_to(v);
 			}
 			break;
 
 			default:
-			return;
+				return;
 		}
 	}
 }
@@ -155,40 +161,41 @@ const unsigned char tui_sm_s3[] PROGMEM = "TUI Modules";
 
 
 PGM_P const tui_sm_table[] PROGMEM = { // Settings Menu
-    (PGM_P)tui_sm_s1,
-    (PGM_P)tui_sm_s2,
-    (PGM_P)tui_blsm_name,
-    (PGM_P)tui_sm_s3,
-    (PGM_P)tui_exit_menu
+	(PGM_P)tui_sm_s1,
+	(PGM_P)tui_sm_s2,
+	(PGM_P)tui_blsm_name,
+	(PGM_P)tui_sm_s3,
+	(PGM_P)tui_exit_menu
 };
 
-static void tui_settingsmenu(void) {
+static void tui_settingsmenu(void)
+{
 	uint8_t sel = 0;
 	for(;;) {
 		sel = tui_gen_listmenu((PGM_P)tui_sm_name, tui_sm_table, 5, sel);
 		switch (sel) {
 			case 0: {
-			uint16_t v = tui_gen_voltmenu((PGM_P)tui_sm_s1, relay_get_autovoltage());
-			relay_set_autovoltage(v);
+				uint16_t v = tui_gen_voltmenu((PGM_P)tui_sm_s1, relay_get_autovoltage());
+				relay_set_autovoltage(v);
 			}
 			break;
 
 			case 1: {
-			uint8_t v = tui_gen_nummenu((PGM_P)tui_sm_s2, 1, 255, relay_get_keepon());
-			relay_set_keepon(v);
+				uint8_t v = tui_gen_nummenu((PGM_P)tui_sm_s2, 1, 255, relay_get_keepon());
+				relay_set_keepon(v);
 			}
 			break;
 
 			case 2:
-			tui_blsettingmenu();
-			break;
+				tui_blsettingmenu();
+				break;
 
 			case 3:
-			tui_modules_editor();
-			break;
+				tui_modules_editor();
+				break;
 
 			default:
-			return;
+				return;
 		}
 	}
 }
@@ -198,12 +205,13 @@ const unsigned char tui_mm_s1[] PROGMEM = "RELAY MODE";
 // Exit Menu (4)
 
 PGM_P const tui_mm_table[] PROGMEM = {
-    (PGM_P)tui_mm_s1,
-    (PGM_P)tui_sm_name,
-    (PGM_P)tui_exit_menu
+	(PGM_P)tui_mm_s1,
+	(PGM_P)tui_sm_name,
+	(PGM_P)tui_exit_menu
 };
 
-void tui_mainmenu(void) {
+void tui_mainmenu(void)
+{
 	uint8_t sel=0;
 	for (;;) {
 		sel = tui_gen_listmenu(PSTR("MAIN MENU"), tui_mm_table, 3, sel);

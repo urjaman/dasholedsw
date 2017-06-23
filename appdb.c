@@ -29,24 +29,26 @@ const struct command_t appdb[] PROGMEM = {
 	{NULL,NULL}
 };
 
-void invalid_command(void) {
+void invalid_command(void)
+{
 	sendstr(tokenptrs[0]);
 	sendstr_P(PSTR(": not found"));
-	}
+}
 
-void *find_appdb(unsigned char* cmd) {
+void *find_appdb(unsigned char* cmd)
+{
 	uint8_t i;
 	const struct command_t * ctptr;
 	PGM_P name;
 	void* fp;
-	for(i=0;;i++) {
+	for(i=0;; i++) {
 		ctptr = &(appdb[i]);
 		name = (PGM_P)pgm_read_word(&(ctptr->name));
 		fp = (void*)pgm_read_word(&(ctptr->function));
 		if (!name) break;
 		if (strcmp_P((char*)cmd,name) == 0) {
 			return fp;
-			}
+		}
 	}
 	return &(invalid_command);
 }

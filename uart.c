@@ -14,7 +14,8 @@ urxbufoff_t volatile uart_rcvwptr;
 urxbufoff_t volatile uart_rcvrptr;
 
 
-ISR(USART_RX_vect) {
+ISR(USART_RX_vect)
+{
 	urxbufoff_t reg = uart_rcvwptr;
 	uart_rcvbuf[reg++] = UDR0;
 	if(reg==UART_BUFLEN) reg = 0;
@@ -22,7 +23,8 @@ ISR(USART_RX_vect) {
 }
 
 
-ISR(USART_UDRE_vect) {
+ISR(USART_UDRE_vect)
+{
 	utxbufoff_t reg = uart_sndrptr;
 	if (uart_sndwptr != reg) {
 		UDR0 = uart_sndbuf[reg++];
@@ -36,12 +38,14 @@ ISR(USART_UDRE_vect) {
 }
 
 
-uint8_t uart_isdata(void) {
+uint8_t uart_isdata(void)
+{
 	if (uart_rcvwptr != uart_rcvrptr) { return 1; }
 	else { return 0; }
-	}
+}
 
-uint8_t uart_recv(void) {
+uint8_t uart_recv(void)
+{
 	urxbufoff_t reg;
 	unsigned char val;
 	while (!uart_isdata()); // when there's nothing to do, one might idle...
@@ -50,11 +54,13 @@ uint8_t uart_recv(void) {
 	if(reg==UART_BUFLEN) reg = 0;
 	uart_rcvrptr = reg;
 	return val;
-	}
+}
 
-void uart_send(uint8_t val) {
+void uart_send(uint8_t val)
+{
 	utxbufoff_t reg;
-	while (uart_sndwptr+1==uart_sndrptr || (uart_sndwptr+1==UARTTX_BUFLEN && !uart_sndrptr)); // wait for space in buf
+	while (uart_sndwptr+1==uart_sndrptr || (uart_sndwptr+1==UARTTX_BUFLEN
+	                                        && !uart_sndrptr)); // wait for space in buf
 	cli();
 	reg = uart_sndwptr;
 	UCSR0B |= _BV(5); // make sure the transmit int is on
@@ -62,9 +68,10 @@ void uart_send(uint8_t val) {
 	if(reg==UARTTX_BUFLEN) reg = 0;
 	uart_sndwptr = reg;
 	sei();
-	}
+}
 
-void uart_init(void) {
+void uart_init(void)
+{
 	cli();
 
 #include <util/setbaud.h>
@@ -82,9 +89,10 @@ void uart_init(void) {
 #endif
 	UCSR0B = 0xB8; // RX complete interrupt enable, UDRE int en, Receiver & Transmitter enable
 	sei();
-	}
+}
 
-void uart_wait_txdone(void) {
+void uart_wait_txdone(void)
+{
 	while (uart_sndwptr != uart_sndrptr);
 }
 

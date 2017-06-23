@@ -11,7 +11,8 @@ static uint32_t secondstimer=0;
 static uint8_t timer5hz=0; // Linear 8-bit counter at 5hz, rolls over every 51s.
 static uint8_t timer5hz_todo=0; // Used to fix linear counter if a 5hz pulse is missed.
 
-static uint16_t timer_gen_5hzp(void) {
+static uint16_t timer_gen_5hzp(void)
+{
 	static uint8_t state=0;
 	timer_5hzp=0;
 	if (timer_1hzp) {
@@ -25,7 +26,8 @@ static uint16_t timer_gen_5hzp(void) {
 	return rv;
 }
 
-void timer_delay_us(uint24_t us) {
+void timer_delay_us(uint24_t us)
+{
 	uint24_t ss_start = timer_get_linear_ss_time();
 	if (us>200000) us = 200000; // Safety Limit for 5hzP
 	uint24_t ss_end = ss_start + (us/US_PER_SSUNIT) + 1;
@@ -37,15 +39,18 @@ void timer_delay_us(uint24_t us) {
 	}
 }
 
-void timer_delay_ms(uint8_t ms) {
+void timer_delay_ms(uint8_t ms)
+{
 	timer_delay_us((uint24_t)ms*1000);
 }
 
-void timer_set_waiting(void) {
+void timer_set_waiting(void)
+{
 	timer_waiting=1;
 }
 
-void timer_run(void) {
+void timer_run(void)
+{
 	uint16_t ncront = cron_next_task();
 	timer_1hzp=0;
 	for (;;) {
@@ -72,19 +77,23 @@ void timer_run(void) {
 }
 
 
-uint32_t timer_get(void) {
+uint32_t timer_get(void)
+{
 	return secondstimer;
 }
 
-uint8_t timer_get_1hzp(void) {
+uint8_t timer_get_1hzp(void)
+{
 	return timer_1hzp;
 }
 
-uint8_t timer_get_5hzp(void) {
+uint8_t timer_get_5hzp(void)
+{
 	return timer_5hzp;
 }
 
-uint8_t timer_get_5hz_cnt(void) {
+uint8_t timer_get_5hz_cnt(void)
+{
 	return timer5hz;
 }
 

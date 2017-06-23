@@ -7,13 +7,15 @@
 #include "adc.h"
 
 
-uint8_t tui_pollkey(void) {
+uint8_t tui_pollkey(void)
+{
 	uint8_t v = buttons_get();
 	mini_mainloop();
 	return v;
 }
 
-uint8_t tui_waitforkey(void) {
+uint8_t tui_waitforkey(void)
+{
 	uint8_t v;
 	for(;;) {
 		v = tui_pollkey();
@@ -21,7 +23,8 @@ uint8_t tui_waitforkey(void) {
 	}
 }
 
-void tui_gen_menuheader(PGM_P header) {
+void tui_gen_menuheader(PGM_P header)
+{
 	uint8_t tw = lcd_strwidth_P(header);
 
 	uint8_t banw1 = ((LCDWIDTH - tw) / 2) - 1;
@@ -35,7 +38,7 @@ void tui_gen_menuheader(PGM_P header) {
 	uint8_t clrw2 = (LCDWIDTH - tw - banw1 - banw2 - clrw1);
 	uint8_t banner[LCDWIDTH/2];
 
-	for (uint8_t i=0;i<LCDWIDTH/2;i++) banner[i] = i&1?0x89:0x91;
+	for (uint8_t i=0; i<LCDWIDTH/2; i++) banner[i] = i&1?0x89:0x91;
 	lcd_gotoxy_dw(0,0);
 	lcd_write_dwb(banner, banw1);
 	lcd_clear_dw(clrw1);
@@ -44,7 +47,9 @@ void tui_gen_menuheader(PGM_P header) {
 	lcd_write_dwb(banner, banw2);
 }
 
-int32_t tui_gen_adjmenu(PGM_P header, printval_func_t *printer, int32_t min, int32_t max, int32_t start, int32_t step) {
+int32_t tui_gen_adjmenu(PGM_P header, printval_func_t *printer, int32_t min, int32_t max, int32_t start,
+                        int32_t step)
+{
 	tui_gen_menuheader(header);
 	uint8_t lbm = buttons_hw_count()==1?2:0;
 	int32_t idx=start;
@@ -98,7 +103,8 @@ int32_t tui_gen_adjmenu(PGM_P header, printval_func_t *printer, int32_t min, int
 	}
 }
 
-int tui_enh_listmenu(PGM_P header, listprint_func_t *printer, uint8_t entries, uint8_t start) {
+int tui_enh_listmenu(PGM_P header, listprint_func_t *printer, uint8_t entries, uint8_t start)
+{
 	tui_gen_menuheader(header);
 	uint8_t idx=start;
 	uint8_t scroll=0;
@@ -120,7 +126,7 @@ int tui_enh_listmenu(PGM_P header, listprint_func_t *printer, uint8_t entries, u
 		}
 		vbp = idx-scroll;
 		uint8_t vi = idx - vbp;
-		for (uint8_t bp=0;bp<brackl;bp++) {
+		for (uint8_t bp=0; bp<brackl; bp++) {
 			lcd_gotoxy_dw(0, bp+1);
 			if (bp==vbp) lcd_puts_dw_P(idstr);
 			else lcd_clear_dw(idw);
@@ -154,7 +160,8 @@ int tui_enh_listmenu(PGM_P header, listprint_func_t *printer, uint8_t entries, u
 }
 
 static PGM_P const * tui_pgm_menu_table;
-static void tui_menu_table_printer(uint8_t idx) {
+static void tui_menu_table_printer(uint8_t idx)
+{
 	lcd_puts_dw_P((PGM_P)pgm_read_word(&(tui_pgm_menu_table[idx])));
 	lcd_clear_eol();
 }
@@ -162,7 +169,8 @@ static void tui_menu_table_printer(uint8_t idx) {
 //Generic Exit Menu Item
 const unsigned char tui_exit_menu[] PROGMEM = "EXIT MENU";
 
-uint8_t tui_gen_listmenu(PGM_P header, PGM_P const menu_table[], const uint8_t entries, uint8_t start) {
+uint8_t tui_gen_listmenu(PGM_P header, PGM_P const menu_table[], const uint8_t entries, uint8_t start)
+{
 	tui_pgm_menu_table = menu_table;
 	int r = tui_enh_listmenu(header, tui_menu_table_printer, entries, start);
 	if (r<0) { // canceled
@@ -173,45 +181,53 @@ uint8_t tui_gen_listmenu(PGM_P header, PGM_P const menu_table[], const uint8_t e
 	return r;
 }
 
-static uint8_t tui_voltmenu_printer(unsigned char* buf, int32_t val) {
+static uint8_t tui_voltmenu_printer(unsigned char* buf, int32_t val)
+{
 	adc_print_dV(buf,(uint16_t)val);
 	return strlen((char*)buf);
 }
 
-uint16_t tui_gen_voltmenu(PGM_P header, uint16_t start) {
+uint16_t tui_gen_voltmenu(PGM_P header, uint16_t start)
+{
 	return adc_from_dV(
-		tui_gen_adjmenu(header,tui_voltmenu_printer,0,1600,adc_to_dV(start),1)
-		);
+	               tui_gen_adjmenu(header,tui_voltmenu_printer,0,1600,adc_to_dV(start),1)
+	       );
 }
 
-static uint8_t tui_nummenu_printer(unsigned char* buf, int32_t val) {
+static uint8_t tui_nummenu_printer(unsigned char* buf, int32_t val)
+{
 	return uint2str(buf,(uint16_t)val);
 }
 
-uint16_t tui_gen_nummenu(PGM_P header, uint16_t min, uint16_t max, uint16_t start) {
+uint16_t tui_gen_nummenu(PGM_P header, uint16_t min, uint16_t max, uint16_t start)
+{
 	return (uint16_t)tui_gen_adjmenu(header,tui_nummenu_printer,min,max,start,1);
 }
 
 
-static void tui_gen_message_start(PGM_P l1) {
+static void tui_gen_message_start(PGM_P l1)
+{
 	lcd_clear();
 	lcd_gotoxy_dw((LCDWIDTH - lcd_strwidth_P(l1))/2,0);
 	lcd_puts_dw_P(l1);
 }
 
-static void tui_gen_message_end(void) {
+static void tui_gen_message_end(void)
+{
 	timer_delay_ms(100);
 	tui_waitforkey();
 }
 
-void tui_gen_message(PGM_P l1, PGM_P l2) {
+void tui_gen_message(PGM_P l1, PGM_P l2)
+{
 	tui_gen_message_start(l1);
 	lcd_gotoxy((LCDWIDTH - lcd_strwidth_P(l2))/2,1);
 	lcd_puts_dw_P(l2);
 	tui_gen_message_end();
 }
 
-void tui_gen_message_m(PGM_P l1, const unsigned char* l2m) {
+void tui_gen_message_m(PGM_P l1, const unsigned char* l2m)
+{
 	tui_gen_message_start(l1);
 	lcd_gotoxy((LCDWIDTH - lcd_strwidth(l2m))/2,1);
 	lcd_puts_dw(l2m);
@@ -222,11 +238,12 @@ const unsigned char tui_q_s1[] PROGMEM = "NO";
 const unsigned char tui_q_s2[] PROGMEM = "YES";
 
 PGM_P const tui_q_table[] PROGMEM = {
-    (PGM_P)tui_q_s1,
-    (PGM_P)tui_q_s2,
+	(PGM_P)tui_q_s1,
+	(PGM_P)tui_q_s2,
 };
 
-uint8_t tui_are_you_sure(void) {
+uint8_t tui_are_you_sure(void)
+{
 	return tui_gen_listmenu(PSTR("Are you sure?"), tui_q_table, 2, 0);
 }
 

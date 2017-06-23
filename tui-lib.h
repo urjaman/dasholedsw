@@ -10,7 +10,8 @@ void tui_gen_menuheader(PGM_P header);
 void tui_set_clock(void);
 
 typedef uint8_t printval_func_t(uint8_t*,int32_t);
-int32_t tui_gen_adjmenu(PGM_P header, printval_func_t *printer, int32_t min, int32_t max, int32_t start, int32_t step);
+int32_t tui_gen_adjmenu(PGM_P header, printval_func_t *printer, int32_t min, int32_t max, int32_t start,
+                        int32_t step);
 
 typedef void listprint_func_t(uint8_t);
 int tui_enh_listmenu(PGM_P header, listprint_func_t *printer, uint8_t itemcnt, uint8_t start);

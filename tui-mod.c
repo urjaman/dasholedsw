@@ -34,10 +34,11 @@ static struct mod_info {
 
 static uint8_t tui_mod_cnt = 0;
 
-void tui_draw_mods(void) {
+void tui_draw_mods(void)
+{
 	/* Dont clear because that might flicker the lcd unnecessarily as we re-draw. */
 	/* Modules are required to draw their entire area. */
-	for (uint8_t i=0;i<tui_mod_cnt;i++) {
+	for (uint8_t i=0; i<tui_mod_cnt; i++) {
 		void(*fp)(uint8_t,uint8_t,uint8_t);
 		const struct tui_mod * dbptr = &(tuidb[mods[i].dbid]);
 		lcd_gotoxy_dw(mods[i].x,mods[i].y); // we help out, so the mods dont absolutely have to
@@ -45,19 +46,22 @@ void tui_draw_mods(void) {
 		fp(mods[i].x,mods[i].y,mods[i].par);
 	}
 }
-static void tui_dbid_printer(uint8_t id) {
+static void tui_dbid_printer(uint8_t id)
+{
 	const struct tui_mod * dbptr = &(tuidb[id]);
 	PGM_P strp = (PGM_P)pgm_read_ptr(&(dbptr->name));
 	lcd_puts_dw_P(strp);
 }
 
-static int tui_select_mod_id(uint8_t prv) {
+static int tui_select_mod_id(uint8_t prv)
+{
 	int cnt = sizeof(tuidb)/sizeof(tuidb[0]);
 	return tui_enh_listmenu(PSTR("Pick Module"), tui_dbid_printer, cnt, prv);
 }
 
 // 1= cancel'd
-static uint8_t tui_edit_mod(uint8_t idx) {
+static uint8_t tui_edit_mod(uint8_t idx)
+{
 	int r;
 	if ((r=tui_select_mod_id(mods[idx].dbid))<0) return 1;
 	uint8_t dbid = r;
@@ -81,17 +85,17 @@ static uint8_t tui_edit_mod(uint8_t idx) {
 		uint8_t lcdb[LCDWIDTH];
 		lcd_clear();
 		// we draw all other mods as boxes and record the areas they inhabit.
-		for (uint8_t i=0;i<tui_mod_cnt;i++) {
+		for (uint8_t i=0; i<tui_mod_cnt; i++) {
 			if (i==idx) continue; // all other...
 			uint8_t w = pgm_read_byte(&(tuidb[mods[i].dbid].width));
 			uint8_t l = pgm_read_byte(&(tuidb[mods[i].dbid].lines));
-			for (uint8_t n=0;n<l;n++) {
+			for (uint8_t n=0; n<l; n++) {
 				const uint8_t ihmark = _BV((mods[i].y+n)&7);
 				uint8_t * ihb = inhabited + mods[i].x + ((mods[i].y+n)/8)*LCDWIDTH;
 				uint8_t idbase = 0;
 				if (n==0) idbase |= 0x01;
 				if (n==l-1) idbase |= 0x80;
-				for (uint8_t z=0;z<w;z++) {
+				for (uint8_t z=0; z<w; z++) {
 					uint8_t indic = idbase;
 					ihb[z] |= ihmark;
 					if ((z==0)||(z==w-1)) indic = ~idbase;
@@ -102,10 +106,10 @@ static uint8_t tui_edit_mod(uint8_t idx) {
 			}
 		}
 		// then we draw this mod either as filled or crosshatch (if conflicting pos)
-		for (uint8_t n=0;n<lc;n++) {
+		for (uint8_t n=0; n<lc; n++) {
 			const uint8_t ihtest = _BV((ny+n)&7);
 			uint8_t * ihb = inhabited + nx + ((ny+n)/8)*LCDWIDTH;
-			for (uint8_t z=0;z<wh;z++) {
+			for (uint8_t z=0; z<wh; z++) {
 				uint8_t indic = 0xFF;
 				if (ihb[z] & ihtest) indic = z&1?0xAA:0x55;
 				lcdb[z] = indic;
@@ -160,8 +164,8 @@ static uint8_t tui_edit_mod(uint8_t idx) {
 				timer_delay_ms(150);
 				mini_mainloop();
 				timer_delay_ms(150);
-				}
-				break;
+			}
+			break;
 		}
 	}
 }
@@ -177,10 +181,11 @@ static PGM_P const tui_tmm_table[] PROGMEM = { // Tui mod menu
 	(PGM_P)tui_exit_menu
 };
 
-static void tui_mod_menu(uint8_t idx) {
+static void tui_mod_menu(uint8_t idx)
+{
 	uint8_t sel = tui_gen_listmenu(PSTR("Module Menu"), tui_tmm_table, 3, 0);
 	if (sel == 1) { // delete
-		for (uint8_t n=idx;n<(tui_mod_cnt-1);n++) mods[n] = mods[n+1];
+		for (uint8_t n=idx; n<(tui_mod_cnt-1); n++) mods[n] = mods[n+1];
 		tui_mod_cnt--;
 		return;
 	}
@@ -190,7 +195,8 @@ static void tui_mod_menu(uint8_t idx) {
 	// exit is default
 }
 
-static void tui_mlist_printer(uint8_t id) {
+static void tui_mlist_printer(uint8_t id)
+{
 	if (id==tui_mod_cnt) {
 		lcd_puts_dw_P(PSTR("Add new.."));
 	} else if (id==tui_mod_cnt+1) {
@@ -213,7 +219,8 @@ static void tui_mlist_printer(uint8_t id) {
 	lcd_clear_eol();
 }
 
-void tui_modules_editor(void) {
+void tui_modules_editor(void)
+{
 	uint8_t mi = 0;
 	while (1) {
 		uint8_t cnt = tui_mod_cnt + 2; // all the mods, then add new, then exit menu

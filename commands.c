@@ -12,26 +12,30 @@
 
 #ifdef ENABLE_UARTIF
 
-static void sendcrlf(void) {
+static void sendcrlf(void)
+{
 	sendstr_P(PSTR("\r\n"));
 }
 
-void echo_cmd(void) {
+void echo_cmd(void)
+{
 	uint8_t i;
-	for (i=1;i<token_count;i++) {
+	for (i=1; i<token_count; i++) {
 		sendstr(tokenptrs[i]);
 		SEND(' ');
 	}
 }
 
-void lcdinit_cmd(void) {
+void lcdinit_cmd(void)
+{
 	lcd_init();
 }
 
-void lcdsay_cmd(void) {
+void lcdsay_cmd(void)
+{
 	uint8_t i,n=0;
 	lcd_clear();
-	for (i=1;i<token_count;i++) {
+	for (i=1; i<token_count; i++) {
 		n += strlen((char*)tokenptrs[i])+1;
 		if (n>32) break;
 		if ((n > 16)&&(n<=32)) lcd_gotoxy(n&0xF,1);
@@ -40,7 +44,8 @@ void lcdsay_cmd(void) {
 	}
 }
 
-void blset_cmd(void) {
+void blset_cmd(void)
+{
 	if (token_count >= 2) {
 		uint8_t brightness= astr2luint(tokenptrs[1]);
 		backlight_activate();
@@ -52,7 +57,8 @@ void blset_cmd(void) {
 	}
 }
 
-void btns_cmd(void) {
+void btns_cmd(void)
+{
 	uint8_t v = buttons_get();
 	sendstr_P(PSTR("BUTTON_"));
 	switch (v) {
@@ -74,7 +80,8 @@ void btns_cmd(void) {
 	}
 }
 
-void adc_cmd(void) {
+void adc_cmd(void)
+{
 	unsigned char buf[7];
 	adc_print_v(buf,adc_read_mb());
 	sendstr(buf);
@@ -83,7 +90,8 @@ void adc_cmd(void) {
 	sendstr(buf);
 }
 
-void relay_cmd(void) {
+void relay_cmd(void)
+{
 	if (token_count >= 2) {
 		uint8_t mode= astr2luint(tokenptrs[1]);
 		relay_set(mode);
@@ -94,7 +102,8 @@ void relay_cmd(void) {
 	}
 }
 
-unsigned long int calc_opdo(uint32_t val1, uint32_t val2, unsigned char *op) {
+unsigned long int calc_opdo(uint32_t val1, uint32_t val2, unsigned char *op)
+{
 	switch (*op) {
 		case '+':
 			val1 += val2;
@@ -121,7 +130,8 @@ unsigned long int calc_opdo(uint32_t val1, uint32_t val2, unsigned char *op) {
 	return val1;
 }
 
-void luint2outdual(uint32_t val) {
+void luint2outdual(uint32_t val)
+{
 	unsigned char buf[11];
 	luint2str(buf,val);
 	sendstr(buf);
@@ -131,7 +141,8 @@ void luint2outdual(uint32_t val) {
 	sendstr_P(PSTR("h) "));
 }
 
-unsigned long int closureparser(unsigned char firsttok, unsigned char*ptr) {
+unsigned long int closureparser(unsigned char firsttok, unsigned char*ptr)
+{
 	unsigned char *op=NULL;
 	unsigned char i,n;
 	unsigned long int val1, val2;
@@ -140,7 +151,7 @@ unsigned long int closureparser(unsigned char firsttok, unsigned char*ptr) {
 	sendstr_P(PSTR("{ "));
 	luint2outdual(val1);
 	n=0;
-	for(i=firsttok+1;i<token_count;i++) {
+	for(i=firsttok+1; i<token_count; i++) {
 		if (n&1) {
 			sendstr(op);
 			SEND(' ');
@@ -164,7 +175,8 @@ unsigned long int closureparser(unsigned char firsttok, unsigned char*ptr) {
 	return val1;
 }
 
-void calc_cmd(void) {
+void calc_cmd(void)
+{
 	unsigned char *op=NULL;
 	unsigned char i,n;
 	unsigned long int val1;
@@ -179,7 +191,7 @@ void calc_cmd(void) {
 		i=2;
 	}
 	n=0;
-	for (;i<token_count;i++) {
+	for (; i<token_count; i++) {
 		if (n&1) {
 			sendstr(op);
 			SEND(' ');
@@ -200,15 +212,17 @@ void calc_cmd(void) {
 }
 
 
-void timer_cmd(void) {
+void timer_cmd(void)
+{
 	luint2outdual(timer_get());
 }
 
-void help_cmd(void) {
+void help_cmd(void)
+{
 	uint8_t i;
 	const struct command_t * ctptr;
 	PGM_P name;
-	for(i=0;;i++) {
+	for(i=0;; i++) {
 		ctptr = &(appdb[i]);
 		name = (PGM_P)pgm_read_word(&(ctptr->name));
 		if (!name) break;

@@ -19,7 +19,8 @@ unsigned char recvbuf[RECVBUFLEN];
 unsigned char token_count;
 unsigned char* tokenptrs[MAXTOKENS];
 
-static void uartif_run(void) {
+static void uartif_run(void)
+{
 	void(*func)(void);
 	if (getline_mc(recvbuf,RECVBUFLEN)) {
 		tokenize(recvbuf,tokenptrs, &token_count);
@@ -35,7 +36,8 @@ static void uartif_run(void) { }
 #endif
 
 
-void mini_mainloop(void) {
+void mini_mainloop(void)
+{
 	timer_run();
 	adc_run();
 	backlight_run();
@@ -45,7 +47,8 @@ void mini_mainloop(void) {
 
 void main (void) __attribute__ ((noreturn));
 
-static void xmega_clocks(void) {
+static void xmega_clocks(void)
+{
 	OSC.CTRL = OSC_RC32MEN_bm; //enable 32MHz oscillator
 	while(!(OSC.STATUS & OSC_RC32MRDY_bm));	//wait for stability
 	CCP = CCP_IOREG_gc; //secured access
@@ -53,7 +56,8 @@ static void xmega_clocks(void) {
 }
 
 /* VPORT0 = A, VPORT1 = C, VPORT2 = D, VPORT3 = R */
-static void xmega_pins(void) {
+static void xmega_pins(void)
+{
 #if 0
 	PORTCFG_MPCMASK = 0x03;
 	PORTR_PIN0CTRL = PORT_OPC_PULLUP_gc;
@@ -75,7 +79,8 @@ static void xmega_pins(void) {
 
 }
 
-void main(void) {
+void main(void)
+{
 	cli();
 	xmega_clocks();
 	xmega_pins();

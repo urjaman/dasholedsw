@@ -5,15 +5,28 @@
 #include "backlight.h"
 #include "lcd.h"
 
-static uint8_t bl_drv_value;
-static uint8_t bl_value;
-static uint8_t bl_to;
-static uint32_t bl_last_sec=0;
+static struct bl_save {
+	uint8_t drv_value;
+	uint8_t value;
+	uint8_t to;
+} bl;
 
+uint8_t backlight_save(void**ptr) {
+	*ptr = &bl;
+	return sizeof(struct bl_save);
+}
+
+void backlight_load(void *b, uint8_t sz) {
+	if (sz != sizeof(struct bl_save)) return; // sorry, no.
+	memcpy(&bl, b, sz);
+}
+
+
+static uint32_t bl_last_sec=0;
 static int8_t bl_v_now;
 static int8_t bl_v_fadeto;
 
-void backlight_simple_set(int8_t v)
+static void backlight_simple_set(int8_t v)
 {
 #ifdef DP_HAS_BL
 	dp_set_bl(v+1); // 0=off
@@ -43,70 +56,70 @@ void backlight_init(void)
 	/* These are just obsolete stuff for timer to work...*/
 	TCC4_PER = 1023;
 	TCC4_CTRLA = TC45_CLKSEL_DIV1_gc;
-	bl_to = 10;
+	bl.to = 10;
 	backlight_set(backlight_default);
 	backlight_simple_set(backlight_default);
 	bl_v_fadeto = -1;
-	bl_drv_value = 7;
+	bl.drv_value = 7;
 }
 
 void backlight_set(uint8_t v)
 {
 	if (v>16) v=16;
-	if ((bl_v_now == bl_value)&&(bl_v_fadeto == bl_value)) {
+	if ((bl_v_now == bl.value)&&(bl_v_fadeto == bl.value)) {
 		backlight_simple_set(v);
 		bl_v_fadeto = v;
 	}
-	bl_value = v;
-	if (bl_drv_value>v) bl_drv_value = v;
+	bl.value = v;
+	if (bl.drv_value>v) bl.drv_value = v;
 }
 
 
 void backlight_set_dv(uint8_t v)
 {
 	if (v>16) v=16;
-	if (v>bl_value) v=bl_value;
-	bl_drv_value = v;
+	if (v>bl.value) v=bl.value;
+	bl.drv_value = v;
 }
 
 uint8_t backlight_get(void)
 {
-	return bl_value;
+	return bl.value;
 }
 
 uint8_t backlight_get_dv(void)
 {
-	return bl_drv_value;
+	return bl.drv_value;
 }
 
 uint8_t backlight_get_to(void)
 {
-	return bl_to;
+	return bl.to;
 }
 
 void backlight_set_to(uint8_t to)
 {
-	bl_to = to;
+	bl.to = to;
 }
 
 void backlight_activate(void)
 {
 	bl_last_sec = timer_get();
-	bl_v_fadeto = bl_value;
+	bl_v_fadeto = bl.value;
 	backlight_fader();
 }
 
 void backlight_run(void)
 {
 	uint32_t diff = timer_get() - bl_last_sec;
-	if (diff >= bl_to) {
+	if (diff >= bl.to) {
 		if (relay_get_autodecision() == RLY_MODE_ON) {
-			bl_v_fadeto = bl_drv_value;
+			bl_v_fadeto = bl.drv_value;
 		} else {
 			bl_v_fadeto = -1;
 		}
 	} else {
-		bl_v_fadeto = bl_value;
+		bl_v_fadeto = bl.value;
 	}
 	backlight_fader();
 }

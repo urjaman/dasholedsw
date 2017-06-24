@@ -7,10 +7,7 @@ void backlight_run(void);
 uint8_t backlight_get(void);
 uint8_t backlight_get_dv(void);
 uint8_t backlight_get_to(void);
-void backlight_set_contrast(uint8_t contrast);
-uint8_t backlight_get_contrast(void);
-#define CONTRAST_MAX 64
-#define CONTRAST_MIN 0
-// For alarmclock
-void backlight_simple_set(int8_t v);
-void backlight_lock(uint8_t lock);
+
+/* saver API */
+uint8_t backlight_save(void**ptr);
+void backlight_load(void *b, uint8_t sz);

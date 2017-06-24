@@ -14,6 +14,8 @@ struct saver_userdb_entry {
 
 static const struct saver_userdb_entry userdb[] PROGMEM = {
 	{ tui_mods_save, tui_mods_load, 'T' },
+	{ relay_save, relay_load, 'R' },
+	{ backlight_save, backlight_load, 'B' },
 };
 
 struct saver_mdat_header {

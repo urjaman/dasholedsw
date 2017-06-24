@@ -9,6 +9,7 @@
 #include "tui.h"
 #include "tui-lib.h"
 #include "tui-mod.h"
+#include "saver.h"
 
 #define TUI_DEFAULT_REFRESH_INTERVAL 5
 
@@ -156,7 +157,8 @@ const unsigned char tui_sm_s1[] PROGMEM = "Rly V.Thrs";
 const unsigned char tui_sm_s2[] PROGMEM = "Rly KeepOn";
 // BL Settings menu (3)
 const unsigned char tui_sm_s3[] PROGMEM = "TUI Modules";
-
+const unsigned char tui_sm_s4[] PROGMEM = "Load Settings";
+const unsigned char tui_sm_s5[] PROGMEM = "Save Settings";
 // Exit Menu (4)
 
 
@@ -165,6 +167,8 @@ PGM_P const tui_sm_table[] PROGMEM = { // Settings Menu
 	(PGM_P)tui_sm_s2,
 	(PGM_P)tui_blsm_name,
 	(PGM_P)tui_sm_s3,
+	(PGM_P)tui_sm_s4,
+	(PGM_P)tui_sm_s5,
 	(PGM_P)tui_exit_menu
 };
 
@@ -172,7 +176,7 @@ static void tui_settingsmenu(void)
 {
 	uint8_t sel = 0;
 	for(;;) {
-		sel = tui_gen_listmenu((PGM_P)tui_sm_name, tui_sm_table, 5, sel);
+		sel = tui_gen_listmenu((PGM_P)tui_sm_name, tui_sm_table, 7, sel);
 		switch (sel) {
 			case 0: {
 				uint16_t v = tui_gen_voltmenu((PGM_P)tui_sm_s1, relay_get_autovoltage());
@@ -193,6 +197,21 @@ static void tui_settingsmenu(void)
 			case 3:
 				tui_modules_editor();
 				break;
+			case 4: {
+				PGM_P msg = saver_load_settings();
+				if (msg) tui_gen_message(PSTR("ERROR:"), msg);
+				else tui_gen_message(PSTR("SETTINGS"), PSTR("LOADED"));
+			}
+			break;
+
+			case 5: {
+				uint8_t buf[32];
+				uint16_t sz = saver_save_settings();
+				uint2str(buf, sz);
+				strcat_P((char*)buf, PSTR(" bytes"));
+				tui_gen_message_m(PSTR("Saved"), buf);
+			}
+			break;
 
 			default:
 				return;

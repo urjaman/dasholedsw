@@ -13,3 +13,6 @@ struct tui_mod {
 
 void tui_draw_mods(void);
 void tui_modules_editor(void);
+
+uint8_t tui_mods_save(void**ptr);
+void tui_mods_load(void *b, uint8_t sz);

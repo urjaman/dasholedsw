@@ -207,13 +207,16 @@ uint16_t tui_gen_nummenu(PGM_P header, uint16_t min, uint16_t max, uint16_t star
 
 static void tui_gen_message_start(PGM_P l1)
 {
-	lcd_clear();
-	lcd_gotoxy_dw((LCDWIDTH - lcd_strwidth_P(l1))/2,0);
+	uint8_t clrw = (LCDWIDTH - lcd_strwidth_P(l1))/2;
+	lcd_gotoxy_dw(0,0);
+	lcd_clear_dw(clrw);
 	lcd_puts_dw_P(l1);
+	lcd_clear_eol();
 }
 
 static void tui_gen_message_end(void)
 {
+	lcd_clear_eos();
 	timer_delay_ms(100);
 	tui_waitforkey();
 }
@@ -221,7 +224,7 @@ static void tui_gen_message_end(void)
 void tui_gen_message(PGM_P l1, PGM_P l2)
 {
 	tui_gen_message_start(l1);
-	lcd_gotoxy((LCDWIDTH - lcd_strwidth_P(l2))/2,1);
+	lcd_clear_dw((LCDWIDTH - lcd_strwidth_P(l2))/2);
 	lcd_puts_dw_P(l2);
 	tui_gen_message_end();
 }
@@ -229,7 +232,7 @@ void tui_gen_message(PGM_P l1, PGM_P l2)
 void tui_gen_message_m(PGM_P l1, const unsigned char* l2m)
 {
 	tui_gen_message_start(l1);
-	lcd_gotoxy((LCDWIDTH - lcd_strwidth(l2m))/2,1);
+	lcd_clear_dw((LCDWIDTH - lcd_strwidth(l2m))/2);
 	lcd_puts_dw(l2m);
 	tui_gen_message_end();
 }

@@ -4,7 +4,6 @@
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <avr/pgmspace.h>
-#include <avr/eeprom.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
 #include <ctype.h>

@@ -25,25 +25,38 @@
 
 #define TUI_MODS_MAX 16
 
-static struct mod_info {
+struct mod_info {
 	uint8_t dbid;
 	uint8_t par;
 	uint8_t x;
 	uint8_t y;
-} mods[TUI_MODS_MAX];
+};
 
-static uint8_t tui_mod_cnt = 0;
+struct tui_modsave {
+	struct mod_info mods[TUI_MODS_MAX];
+	uint8_t tui_mod_cnt;
+} tm;
+
+uint8_t tui_mods_save(void**ptr) {
+	*ptr = &tm;
+	return sizeof(struct tui_modsave);
+}
+
+void tui_mods_load(void *b, uint8_t sz) {
+	if (sz != sizeof(struct tui_modsave)) return; // sorry, no.
+	memcpy(&tm, b, sz);
+}
 
 void tui_draw_mods(void)
 {
 	/* Dont clear because that might flicker the lcd unnecessarily as we re-draw. */
 	/* Modules are required to draw their entire area. */
-	for (uint8_t i=0; i<tui_mod_cnt; i++) {
+	for (uint8_t i=0; i<tm.tui_mod_cnt; i++) {
 		void(*fp)(uint8_t,uint8_t,uint8_t);
-		const struct tui_mod * dbptr = &(tuidb[mods[i].dbid]);
-		lcd_gotoxy_dw(mods[i].x,mods[i].y); // we help out, so the mods dont absolutely have to
+		const struct tui_mod * dbptr = &(tuidb[tm.mods[i].dbid]);
+		lcd_gotoxy_dw(tm.mods[i].x,tm.mods[i].y); // we help out, so the mods dont absolutely have to
 		fp = (void*)pgm_read_ptr(&(dbptr->function));
-		fp(mods[i].x,mods[i].y,mods[i].par);
+		fp(tm.mods[i].x,tm.mods[i].y,tm.mods[i].par);
 	}
 }
 static void tui_dbid_printer(uint8_t id)
@@ -51,6 +64,7 @@ static void tui_dbid_printer(uint8_t id)
 	const struct tui_mod * dbptr = &(tuidb[id]);
 	PGM_P strp = (PGM_P)pgm_read_ptr(&(dbptr->name));
 	lcd_puts_dw_P(strp);
+	lcd_clear_eol();
 }
 
 static int tui_select_mod_id(uint8_t prv)
@@ -63,19 +77,19 @@ static int tui_select_mod_id(uint8_t prv)
 static uint8_t tui_edit_mod(uint8_t idx)
 {
 	int r;
-	if ((r=tui_select_mod_id(mods[idx].dbid))<0) return 1;
+	if ((r=tui_select_mod_id(tm.mods[idx].dbid))<0) return 1;
 	uint8_t dbid = r;
 	const struct tui_mod * dbptr = &(tuidb[dbid]);
 	int (*ps)(uint8_t);
 	ps = (void*)pgm_read_ptr(&(dbptr->parselect));
-	uint8_t par = mods[idx].par;
-	if ((r=ps(mods[idx].par))<0) return 1;
+	uint8_t par = tm.mods[idx].par;
+	if ((r=ps(tm.mods[idx].par))<0) return 1;
 	uint8_t lbm = buttons_hw_count()==1?1:0;
 	par = r;
 	uint8_t wh = pgm_read_byte(&(dbptr->width));
 	uint8_t lc = pgm_read_byte(&(dbptr->lines));
-	uint8_t nx = mods[idx].x;
-	uint8_t ny = mods[idx].y;
+	uint8_t nx = tm.mods[idx].x;
+	uint8_t ny = tm.mods[idx].y;
 	uint8_t dir = 0;
 	uint8_t pk = 0;
 	uint8_t rdl = 0;
@@ -85,13 +99,13 @@ static uint8_t tui_edit_mod(uint8_t idx)
 		uint8_t lcdb[LCDWIDTH];
 		lcd_clear();
 		// we draw all other mods as boxes and record the areas they inhabit.
-		for (uint8_t i=0; i<tui_mod_cnt; i++) {
+		for (uint8_t i=0; i<tm.tui_mod_cnt; i++) {
 			if (i==idx) continue; // all other...
-			uint8_t w = pgm_read_byte(&(tuidb[mods[i].dbid].width));
-			uint8_t l = pgm_read_byte(&(tuidb[mods[i].dbid].lines));
+			uint8_t w = pgm_read_byte(&(tuidb[tm.mods[i].dbid].width));
+			uint8_t l = pgm_read_byte(&(tuidb[tm.mods[i].dbid].lines));
 			for (uint8_t n=0; n<l; n++) {
-				const uint8_t ihmark = _BV((mods[i].y+n)&7);
-				uint8_t * ihb = inhabited + mods[i].x + ((mods[i].y+n)/8)*LCDWIDTH;
+				const uint8_t ihmark = _BV((tm.mods[i].y+n)&7);
+				uint8_t * ihb = inhabited + tm.mods[i].x + ((tm.mods[i].y+n)/8)*LCDWIDTH;
 				uint8_t idbase = 0;
 				if (n==0) idbase |= 0x01;
 				if (n==l-1) idbase |= 0x80;
@@ -101,7 +115,7 @@ static uint8_t tui_edit_mod(uint8_t idx)
 					if ((z==0)||(z==w-1)) indic = ~idbase;
 					lcdb[z] = indic;
 				}
-				lcd_gotoxy_dw(mods[i].x, mods[i].y+n);
+				lcd_gotoxy_dw(tm.mods[i].x, tm.mods[i].y+n);
 				lcd_write_dwb(lcdb, w);
 			}
 		}
@@ -135,10 +149,10 @@ static uint8_t tui_edit_mod(uint8_t idx)
 		pk = k;
 		switch (k) {
 			case BUTTON_OK:
-				mods[idx].dbid = dbid;
-				mods[idx].par = par;
-				mods[idx].x = nx;
-				mods[idx].y = ny;
+				tm.mods[idx].dbid = dbid;
+				tm.mods[idx].par = par;
+				tm.mods[idx].x = nx;
+				tm.mods[idx].y = ny;
 				return 0;
 			case BUTTON_CANCEL:
 				return 1;
@@ -185,8 +199,8 @@ static void tui_mod_menu(uint8_t idx)
 {
 	uint8_t sel = tui_gen_listmenu(PSTR("Module Menu"), tui_tmm_table, 3, 0);
 	if (sel == 1) { // delete
-		for (uint8_t n=idx; n<(tui_mod_cnt-1); n++) mods[n] = mods[n+1];
-		tui_mod_cnt--;
+		for (uint8_t n=idx; n<(tm.tui_mod_cnt-1); n++) tm.mods[n] = tm.mods[n+1];
+		tm.tui_mod_cnt--;
 		return;
 	}
 	if (sel == 0) {
@@ -197,13 +211,13 @@ static void tui_mod_menu(uint8_t idx)
 
 static void tui_mlist_printer(uint8_t id)
 {
-	if (id==tui_mod_cnt) {
+	if (id==tm.tui_mod_cnt) {
 		lcd_puts_dw_P(PSTR("Add new.."));
-	} else if (id==tui_mod_cnt+1) {
+	} else if (id==tm.tui_mod_cnt+1) {
 		lcd_puts_dw_P((PGM_P)tui_exit_menu);
 	} else {
 		uint8_t buf[32];
-		const struct tui_mod * dbptr = &(tuidb[mods[id].dbid]);
+		const struct tui_mod * dbptr = &(tuidb[tm.mods[id].dbid]);
 		PGM_P strp = (PGM_P)pgm_read_ptr(&(dbptr->name));
 		uint8_t l = uchar2str(buf, id);
 		buf[l++] = ':';
@@ -211,7 +225,7 @@ static void tui_mlist_printer(uint8_t id)
 		strncpy_P((char*)buf+l, strp, 26-l);
 		l = strlen((char*)buf);
 		buf[l++] = '(';
-		l += uchar2str(buf+l,mods[id].par);
+		l += uchar2str(buf+l,tm.mods[id].par);
 		buf[l++] = ')';
 		buf[l] = 0;
 		lcd_puts_dw(buf);
@@ -223,21 +237,21 @@ void tui_modules_editor(void)
 {
 	uint8_t mi = 0;
 	while (1) {
-		uint8_t cnt = tui_mod_cnt + 2; // all the mods, then add new, then exit menu
+		uint8_t cnt = tm.tui_mod_cnt + 2; // all the mods, then add new, then exit menu
 		int r = tui_enh_listmenu(PSTR("Module List"), tui_mlist_printer, cnt, mi);
 		if (r<0) return; // exit
 		mi = r;
 		if (mi>=cnt-1) { // exit
 			return;
 		} else if (mi==cnt-2) { // add new
-			if (tui_mod_cnt >= TUI_MODS_MAX) {
+			if (tm.tui_mod_cnt >= TUI_MODS_MAX) {
 				tui_gen_message(PSTR("Too Many"), PSTR("Modules :("));
 			} else {
 				struct mod_info n = { 0, 0, 0, 0 };
-				mods[tui_mod_cnt++] = n;
-				if (tui_edit_mod(tui_mod_cnt-1)) {
+				tm.mods[tm.tui_mod_cnt++] = n;
+				if (tui_edit_mod(tm.tui_mod_cnt-1)) {
 					// canceled
-					tui_mod_cnt--;
+					tm.tui_mod_cnt--;
 				}
 			}
 		} else { // picked a module

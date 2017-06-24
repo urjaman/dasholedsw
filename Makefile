@@ -1,7 +1,7 @@
 # AVR-GCC Makefile
 PROJECT=minivlcd
-SOURCES=main.c uart.c console.c lib.c appdb.c commands.c lcd.c timer.c backlight.c buttons.c adc.c relay.c tui.c cron.c ssd1331.c tui-lib.c tui-mod.c tui-modules.c
-HEADERS=buttons.h main.h cron.h uart.h tui-lib.h ssd1331.h tui-mod.h
+SOURCES=main.c uart.c console.c lib.c appdb.c commands.c lcd.c timer.c backlight.c buttons.c adc.c relay.c tui.c cron.c ssd1331.c tui-lib.c tui-mod.c tui-modules.c saver.c
+HEADERS=buttons.h main.h cron.h uart.h tui-lib.h ssd1331.h tui-mod.h saver.h
 DEPS=Makefile $(HEADERS)
 CC=avr-gcc
 OBJCOPY=avr-objcopy

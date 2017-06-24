@@ -11,6 +11,8 @@
 #include "adc.h"
 #include "relay.h"
 #include "tui.h"
+#include "saver.h"
+
 
 #ifdef ENABLE_UARTIF
 #define RECVBUFLEN 64
@@ -92,6 +94,7 @@ void main(void)
 	adc_init();
 	relay_init();
 	tui_init();
+	saver_load_settings(); // we load, but dont report errors
 	PMIC_CTRL = 0x87;
 	sei();
 #ifdef ENABLE_UARTIF

@@ -56,9 +56,6 @@ ret:
 void backlight_init(void)
 {
 	const uint8_t backlight_default = 14;
-	/* These are just obsolete stuff for timer to work...*/
-	TCC4_PER = 1023;
-	TCC4_CTRLA = TC45_CLKSEL_DIV1_gc;
 	bl.to = 10;
 	backlight_set(backlight_default);
 	backlight_simple_set(backlight_default);

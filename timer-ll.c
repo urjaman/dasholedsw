@@ -8,7 +8,7 @@ volatile uint8_t timer_run_todo=0;
 #define VL (((F_CPU+512)/1024)&0xFF)
 #define VH (((F_CPU+512)/1024)/256)
 
-ISR(TCC4_OVF_vect, ISR_NAKED) {
+ISR(TCD5_OVF_vect, ISR_NAKED) {
 	asm volatile (
 	".lcomm subsectimer,2\n\t"
 	"push r1\n\t"
@@ -32,7 +32,7 @@ ISR(TCC4_OVF_vect, ISR_NAKED) {
 	"sts subsectimer+1, r24\n\t"
 	"1:\n\t"
 	"ldi r24, 0x01\n\t"
-	"sts 0x080C, r24\n\t" /* TCC4_INTFLAGS */
+	"sts 0x094C, r24\n\t" /* TCD5_INTFLAGS */
 	"pop r25\n\t"
 	"pop r24\n\t"
 	"out __SREG__, r1\n\t"
@@ -53,10 +53,12 @@ uint16_t timer_get_subsectimer(void) {
 	return rv;
 }
 
-void timer_init(void) { // TCC4 is being run in PWM mode by the backlight init already, so only enable OVF interrupt
+void timer_init(void) {
 	timer_run_todo=0;
 	timer_waiting=1;
-	TCC4_INTCTRLA = 0x3; /* High level for now ... */
+	TCD5_PER = 1023;
+	TCD5_CTRLA = TC45_CLKSEL_DIV1_gc;
+	TCD5_INTCTRLA = 0x3; /* High level for now ... */
 }
 
 uint8_t timer_getdec_todo(void) {

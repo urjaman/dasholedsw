@@ -20,6 +20,8 @@ uint8_t tui_gen_listmenu(PGM_P header, PGM_P const menu_table[], uint8_t itemcnt
 
 extern const unsigned char tui_exit_menu[];
 
+
+uint8_t tui_yes_no(PGM_P msg, uint8_t prv);
 uint8_t tui_are_you_sure(void);
 
 uint16_t tui_gen_voltmenu(PGM_P header, uint16_t start);

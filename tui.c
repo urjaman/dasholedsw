@@ -112,11 +112,13 @@ static void tui_relaymenu(void)
 const unsigned char tui_blsm_name[] PROGMEM = "Disp. cfg";
 const unsigned char tui_blsm_s1[] PROGMEM = "Brightness";
 const unsigned char tui_blsm_s2[] PROGMEM = "Drv Bright";
-const unsigned char tui_blsm_s3[] PROGMEM = "Timeout";
+const unsigned char tui_blsm_s3[] PROGMEM = "Always Drv";
+const unsigned char tui_blsm_s4[] PROGMEM = "Timeout";
 PGM_P const tui_blsm_table[] PROGMEM = { // BL Settings Menu
 	(PGM_P)tui_blsm_s1,
 	(PGM_P)tui_blsm_s2,
 	(PGM_P)tui_blsm_s3,
+	(PGM_P)tui_blsm_s4,
 	(PGM_P)tui_exit_menu
 };
 
@@ -124,7 +126,7 @@ static void tui_blsettingmenu(void)
 {
 	uint8_t sel = 0;
 	for(;;) {
-		sel = tui_gen_listmenu((PGM_P)tui_blsm_name, tui_blsm_table, 4, sel);
+		sel = tui_gen_listmenu((PGM_P)tui_blsm_name, tui_blsm_table, 5, sel);
 		switch (sel) {
 			case 0: {
 				uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s1, 0, 16, backlight_get());
@@ -139,7 +141,13 @@ static void tui_blsettingmenu(void)
 			break;
 
 			case 2: {
-				uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s3, 1, 255, backlight_get_to());
+				uint8_t v = tui_yes_no((PGM_P)tui_blsm_s3, backlight_get_dv_always());
+				backlight_set_dv_always(v);
+			}
+			break;
+
+			case 3: {
+				uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s4, 1, 255, backlight_get_to());
 				backlight_set_to(v);
 			}
 			break;

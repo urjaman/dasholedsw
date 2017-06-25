@@ -245,9 +245,14 @@ PGM_P const tui_q_table[] PROGMEM = {
 	(PGM_P)tui_q_s2,
 };
 
+uint8_t tui_yes_no(PGM_P msg, uint8_t prv)
+{
+	return tui_gen_listmenu(msg, tui_q_table, 2, prv);
+}
+
 uint8_t tui_are_you_sure(void)
 {
-	return tui_gen_listmenu(PSTR("Are you sure?"), tui_q_table, 2, 0);
+	return tui_yes_no(PSTR("Are you sure?"), 0);
 }
 
 

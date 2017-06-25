@@ -5,6 +5,9 @@
 #include "backlight.h"
 #include "lcd.h"
 
+#define DRV_ALWAYS 0x80
+#define DRV_VAL 0x7F
+
 static struct bl_save {
 	uint8_t drv_value;
 	uint8_t value;
@@ -71,15 +74,29 @@ void backlight_set(uint8_t v)
 		bl_v_fadeto = v;
 	}
 	bl.value = v;
-	if (bl.drv_value>v) bl.drv_value = v;
+	if ((bl.drv_value&DRV_VAL)>v) bl.drv_value = (bl.drv_value & DRV_ALWAYS) + v;
 }
 
+
+void backlight_set_dv_always(uint8_t v)
+{
+	if (v) {
+		bl.drv_value |= DRV_ALWAYS;
+	} else {
+		bl.drv_value &= ~DRV_ALWAYS;
+	}
+}
+
+uint8_t backlight_get_dv_always(void)
+{
+	return !!(bl.drv_value & DRV_ALWAYS);
+}
 
 void backlight_set_dv(uint8_t v)
 {
 	if (v>16) v=16;
 	if (v>bl.value) v=bl.value;
-	bl.drv_value = v;
+	bl.drv_value = (bl.drv_value & DRV_ALWAYS) + v;
 }
 
 uint8_t backlight_get(void)
@@ -89,7 +106,7 @@ uint8_t backlight_get(void)
 
 uint8_t backlight_get_dv(void)
 {
-	return bl.drv_value;
+	return bl.drv_value & DRV_VAL;
 }
 
 uint8_t backlight_get_to(void)
@@ -113,8 +130,8 @@ void backlight_run(void)
 {
 	uint32_t diff = timer_get() - bl_last_sec;
 	if (diff >= bl.to) {
-		if (relay_get_autodecision() == RLY_MODE_ON) {
-			bl_v_fadeto = bl.drv_value;
+		if ((bl.drv_value&DRV_ALWAYS)||(relay_get_autodecision() == RLY_MODE_ON)) {
+			bl_v_fadeto = bl.drv_value & DRV_VAL;
 		} else {
 			bl_v_fadeto = -1;
 		}

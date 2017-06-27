@@ -11,6 +11,7 @@
 #include "adc.h"
 #include "relay.h"
 #include "tui.h"
+#include "pulse.h"
 #include "saver.h"
 
 
@@ -44,6 +45,7 @@ void mini_mainloop(void)
 	adc_run();
 	backlight_run();
 	relay_run();
+	pulse_run();
 	uartif_run();
 }
 
@@ -86,13 +88,14 @@ void main(void)
 	cli();
 	xmega_clocks();
 	xmega_pins();
+	timer_init();
 	uart_init();
 	lcd_init();
 	backlight_init();
-	timer_init(); // must be after backlight init
 	buttons_init();
 	adc_init();
 	relay_init();
+	pulse_init();
 	tui_init();
 	saver_load_settings(); // we load, but dont report errors
 	PMIC_CTRL = 0x87;

@@ -5,6 +5,7 @@
 #include "adc.h"
 #include "relay.h"
 #include "timer.h"
+#include "pulse.h"
 #include "lib.h"
 #include "lcd.h"
 
@@ -92,6 +93,7 @@ TUI_MOD(tui_ripple_mod,tui_adcsel,"RIPPLE",8*LCD_CHARW,1)
 	tui_gbv_mod(x, tui_ch_char(par), 'R', adc_read_maxv(par)-adc_read_minv(par));
 }
 
+
 TUI_MOD(tui_rlst_mod,null_ps,"RELAY STATE",5*LCD_CHARW,1)
 {
 	uint8_t mb[6];
@@ -120,5 +122,56 @@ TUI_MOD(tui_rlst_mod,null_ps,"RELAY STATE",5*LCD_CHARW,1)
 			break;
 	}
 	tui_modfinish(mb,5,x,5*LCD_CHARW);
+}
+
+
+static const unsigned char tui_pch_s0[] PROGMEM = "DAUX";
+static const unsigned char tui_pch_s1[] PROGMEM = "ECULAMP";
+static const unsigned char tui_pch_s2[] PROGMEM = "ROADSPD";
+static const unsigned char tui_pch_s3[] PROGMEM = "RPM";
+static PGM_P const tui_pch_table[] PROGMEM = {
+	(PGM_P)tui_pch_s0,
+	(PGM_P)tui_pch_s1,
+	(PGM_P)tui_pch_s2,
+	(PGM_P)tui_pch_s3,
+	(PGM_P)tui_exit_menu,
+};
+
+int tui_pulsesel(uint8_t par);
+int tui_pulsesel(uint8_t par)
+{
+	par = tui_gen_listmenu(PSTR("PULSE CH"), tui_pch_table, 5, par);
+	if (par >= 4) return -1;
+	return par;
+}
+
+
+TUI_MOD(tui_pstate_mod,tui_pulsesel,"PULSE STATE",8*LCD_CHARW,1)
+{
+	uint8_t buf[9];
+	uint16_t e;
+	uint8_t s = pulse_state(par+4, &e);
+	buf[0] = '4'+par;
+	buf[1] = ':';
+	buf[2] = '0'+s;
+	buf[3] = '|';
+	uchar2xstr(buf+4, e>>8);
+	uchar2xstr(buf+6, e&0xFF);
+	tui_modfinish(buf,8,x,8*LCD_CHARW);
+}
+
+TUI_MOD(tui_pulsehz_mod,tui_pulsesel,"PULSE HZ",9*LCD_CHARW,1)
+{
+	uint8_t buf[10];
+	uint24_t hz = pulse_get_hz(par+4);
+	buf[0] = '4'+par;
+	buf[1] = ':';
+	uint24_t hzi = hz >> PULSE_HZ_SHIFT;
+	if (hzi>99999) hzi = 99999;
+	uint8_t n = luint2str(buf+2, hzi) + 2;
+	buf[n] = '.';
+	buf[n+1] = '0' + ( (hz & (_BV(PULSE_HZ_SHIFT)-1) * 10) >> PULSE_HZ_SHIFT );
+	buf[n+2] = 0;
+ 	tui_modfinish(buf,n+2,x,9*LCD_CHARW);
 }
 

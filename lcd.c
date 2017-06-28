@@ -237,3 +237,26 @@ start:
 	goto start;
 }
 
+/* Fill the screen with one character. */
+void lcd_huge_char(uint8_t c)
+{
+	PGM_P block;
+	if (c < 0x20) c = 0x20;
+	block = (const char*)&(my_font[c-0x20][0]);
+	uint8_t buf[64];
+	lcd_gotoxy_dw(0,0);
+	uint8_t extra = (LCDWIDTH - 64) / 2;
+	for (uint8_t b=0x80; b; b = b >> 1) {
+		lcd_clear_dw(extra);
+		for (uint8_t n=0; n<8; n++) {
+			if (pgm_read_byte(block+n) & b) {
+				memset(buf+n*8,0xFF,8);
+			} else {
+				memset(buf+n*8,0,8);
+			}
+		}
+		lcd_write_dwb(buf, 64);
+		lcd_clear_eol();
+	}
+	lcd_clear_eos();
+}

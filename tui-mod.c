@@ -25,6 +25,9 @@
 
 #define TUI_MODS_MAX 16
 
+#define TUI_MOD_PAGE_SHIFT 5
+
+#define TUI_MOD_Y_MASK (_BV(TUI_MOD_PAGE_SHIFT)-1)
 struct mod_info {
 	uint8_t dbid;
 	uint8_t par;
@@ -47,18 +50,32 @@ void tui_mods_load(void *b, uint8_t sz) {
 	memcpy(&tm, b, sz);
 }
 
-void tui_draw_mods(void)
+void tui_draw_mods(uint8_t page)
 {
 	/* Dont clear because that might flicker the lcd unnecessarily as we re-draw. */
 	/* Modules are required to draw their entire area. */
 	for (uint8_t i=0; i<tm.tui_mod_cnt; i++) {
+		uint8_t p = tm.mods[i].y >> TUI_MOD_PAGE_SHIFT;
+		if (p != page) continue;
+		uint8_t y = tm.mods[i].y & TUI_MOD_Y_MASK;
 		void(*fp)(uint8_t,uint8_t,uint8_t);
 		const struct tui_mod * dbptr = &(tuidb[tm.mods[i].dbid]);
-		lcd_gotoxy_dw(tm.mods[i].x,tm.mods[i].y); // we help out, so the mods dont absolutely have to
+		lcd_gotoxy_dw(tm.mods[i].x,y); // we help out, so the mods dont absolutely have to
 		fp = (void*)pgm_read_ptr(&(dbptr->function));
-		fp(tm.mods[i].x,tm.mods[i].y,tm.mods[i].par);
+		fp(tm.mods[i].x,y ,tm.mods[i].par);
 	}
 }
+
+uint8_t tui_mods_pages(void)
+{
+	uint8_t mp = 0;
+	for (uint8_t i=0; i<tm.tui_mod_cnt; i++) {
+		uint8_t p = tm.mods[i].y >> TUI_MOD_PAGE_SHIFT;
+		if (p > mp) mp = p;
+	}
+	return mp + 1;
+}
+
 static void tui_dbid_printer(uint8_t id)
 {
 	const struct tui_mod * dbptr = &(tuidb[id]);
@@ -84,12 +101,14 @@ static uint8_t tui_edit_mod(uint8_t idx)
 	ps = (void*)pgm_read_ptr(&(dbptr->parselect));
 	uint8_t par = tm.mods[idx].par;
 	if ((r=ps(tm.mods[idx].par))<0) return 1;
+	uint8_t np = tui_gen_nummenu(PSTR("PAGE"), 1, 8, 1 + (tm.mods[idx].y >> TUI_MOD_PAGE_SHIFT)) - 1;
 	uint8_t lbm = buttons_hw_count()==1?1:0;
 	par = r;
 	uint8_t wh = pgm_read_byte(&(dbptr->width));
 	uint8_t lc = pgm_read_byte(&(dbptr->lines));
 	uint8_t nx = tm.mods[idx].x;
-	uint8_t ny = tm.mods[idx].y;
+	uint8_t ny = tm.mods[idx].y & TUI_MOD_Y_MASK;
+
 	uint8_t dir = 0;
 	uint8_t pk = 0;
 	uint8_t rdl = 0;
@@ -97,15 +116,16 @@ static uint8_t tui_edit_mod(uint8_t idx)
 	while (1) {
 		uint8_t inhabited[LCDWIDTH * ((LCD_MAXY+7) / 8)] = {};
 		uint8_t lcdb[LCDWIDTH];
-		lcd_clear();
 		// we draw all other mods as boxes and record the areas they inhabit.
 		for (uint8_t i=0; i<tm.tui_mod_cnt; i++) {
 			if (i==idx) continue; // all other...
+			if ((tm.mods[i].y >> TUI_MOD_PAGE_SHIFT) != np) continue; /* only this page */
 			uint8_t w = pgm_read_byte(&(tuidb[tm.mods[i].dbid].width));
 			uint8_t l = pgm_read_byte(&(tuidb[tm.mods[i].dbid].lines));
 			for (uint8_t n=0; n<l; n++) {
-				const uint8_t ihmark = _BV((tm.mods[i].y+n)&7);
-				uint8_t * ihb = inhabited + tm.mods[i].x + ((tm.mods[i].y+n)/8)*LCDWIDTH;
+				const uint8_t iy = tm.mods[i].y & TUI_MOD_Y_MASK;
+				const uint8_t ihmark = _BV((iy+n)&7);
+				uint8_t * ihb = inhabited + tm.mods[i].x + ((iy+n)/8)*LCDWIDTH;
 				uint8_t idbase = 0;
 				if (n==0) idbase |= 0x01;
 				if (n==l-1) idbase |= 0x80;
@@ -115,7 +135,7 @@ static uint8_t tui_edit_mod(uint8_t idx)
 					if ((z==0)||(z==w-1)) indic = ~idbase;
 					lcdb[z] = indic;
 				}
-				lcd_gotoxy_dw(tm.mods[i].x, tm.mods[i].y+n);
+				lcd_gotoxy_dw(tm.mods[i].x, iy+n);
 				lcd_write_dwb(lcdb, w);
 			}
 		}
@@ -126,10 +146,28 @@ static uint8_t tui_edit_mod(uint8_t idx)
 			for (uint8_t z=0; z<wh; z++) {
 				uint8_t indic = 0xFF;
 				if (ihb[z] & ihtest) indic = z&1?0xAA:0x55;
+				ihb[z] |= ihtest; /* mark this mod too for clearing unused space */
 				lcdb[z] = indic;
 			}
 			lcd_gotoxy_dw(nx, ny+n);
 			lcd_write_dwb(lcdb, wh);
+		}
+		/* clear the area of screen not touched. */
+		for (uint8_t n=0; n<LCD_MAXY; n++) {
+			const uint8_t ihtest = _BV((n)&7);
+			uint8_t * ihb = inhabited + ((n)/8)*LCDWIDTH;
+			for (uint8_t z=0; z<LCDWIDTH; z++) {
+				if (ihb[z] & ihtest) continue; /* touched, skip. */
+				/* oh, lets seek to end... */
+				uint8_t w;
+				for (w=z+1; w<LCDWIDTH; w++) {
+					if (ihb[w] & ihtest) break;
+				}
+				uint8_t l = w - z;
+				lcd_gotoxy_dw(z, n);
+				lcd_clear_dw(l);
+				z += (l-1);
+			}
 		}
 		uint8_t k=0;
 		timer_delay_ms(25);
@@ -152,7 +190,7 @@ static uint8_t tui_edit_mod(uint8_t idx)
 				tm.mods[idx].dbid = dbid;
 				tm.mods[idx].par = par;
 				tm.mods[idx].x = nx;
-				tm.mods[idx].y = ny;
+				tm.mods[idx].y = ny | (np << TUI_MOD_PAGE_SHIFT);
 				return 0;
 			case BUTTON_CANCEL:
 				return 1;

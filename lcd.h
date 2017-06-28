@@ -54,3 +54,5 @@ void lcd_clear_eos(void); /* clear to end of screen */
 
 void lcd_clear_big_eol(void); /* clear to end of big line */
 
+/* HUGE. */
+void lcd_huge_char(uint8_t c);

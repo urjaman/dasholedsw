@@ -17,40 +17,16 @@ static uint8_t tui_force_draw;
 static uint8_t tui_next_refresh;
 static uint8_t tui_refresh_interval=TUI_DEFAULT_REFRESH_INTERVAL; // by default 1s
 
-extern uint16_t adc_avg_cnt;
-static uint8_t prev_k = 0;
-
+static uint8_t tui_page = 0;
 
 static void tui_draw_mainpage(uint8_t forced)
 {
 	tui_force_draw = 0;
 	if (!forced) {
-//		tui_refresh_interval = tui_update_refresh_interval();
 		tui_next_refresh = timer_get_5hz_cnt()+tui_refresh_interval;
 	}
-#if 0
-	lcd_gotoxy_dw(0,0);
 
-	uint8_t buf[10];
-	adc_print_v(buf, adc_read_mb());
-	lcd_puts_big(buf);
-	lcd_clear_big_eol();
-
-	buf[0] = prev_k + '0'; buf[1] = 'K'; buf[2] = 0;
-	lcd_puts(buf);
-	lcd_clear_eol();
-
-	adc_print_v(buf, adc_read_sb());
-	lcd_puts(buf);
-	lcd_clear_eol();
-
-	luint2xstr(buf, adc_avg_cnt);
-	lcd_puts(buf);
-	lcd_clear_eos();
-#endif
-	tui_draw_mods();
-
-
+	tui_draw_mods(tui_page);
 }
 
 void tui_init(void)
@@ -63,12 +39,16 @@ void tui_init(void)
 void tui_run(void)
 {
 	uint8_t k = buttons_get();
-	if ((prev_k != k)&&(k)) {
-		prev_k = k;
-		tui_force_draw = 1;
-	}
 	if (k==BUTTON_OK) {
 		tui_mainmenu();
+		lcd_clear();
+		tui_force_draw = 1;
+	} else if (k==BUTTON_NEXT) {
+		const uint8_t tui_pages = tui_mods_pages();
+		tui_page = (tui_page + 1) % tui_pages;
+		lcd_huge_char('1' + tui_page);
+		timer_delay_ms(150);
+		timer_delay_ms(150);
 		lcd_clear();
 		tui_force_draw = 1;
 	}

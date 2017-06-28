@@ -20,7 +20,7 @@ struct p_int {
 static volatile struct p_int pulse;
 
 #define HZ_SHIFT PULSE_HZ_SHIFT
-#define TIMER_HZ (F_CPU/1024)
+#define TIMER_HZ PULSE_TIMER_HZ
 
 /* 1 second. */
 #define ZERO_TIMEOUT TIMER_HZ
@@ -166,8 +166,11 @@ uint16_t pulse_edge_ctr(const enum pulse_ch ch) {
 	return read_cli_16b(&pulse.edge_counter[ich]);
 }
 
-uint24_t pulse_get_hz(const enum pulse_ch ch) {
+uint24_t pulse_get_hz(const enum pulse_ch ch, uint16_t *age) {
 	const uint8_t ich = ch-4;
+	if (age) {
+		*age = read_tcc() - last_out[ich];
+	}
 	return pulse_hz[ich];
 }
 

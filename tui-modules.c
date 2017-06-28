@@ -163,7 +163,7 @@ TUI_MOD(tui_pstate_mod,tui_pulsesel,"PULSE STATE",8*LCD_CHARW,1)
 TUI_MOD(tui_pulsehz_mod,tui_pulsesel,"PULSE HZ",9*LCD_CHARW,1)
 {
 	uint8_t buf[10];
-	uint24_t hz = pulse_get_hz(par+4);
+	uint24_t hz = pulse_get_hz(par+4, NULL);
 	buf[0] = '4'+par;
 	buf[1] = ':';
 	uint24_t hzi = hz >> PULSE_HZ_SHIFT;

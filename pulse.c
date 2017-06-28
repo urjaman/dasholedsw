@@ -132,7 +132,7 @@ void pulse_run(void) {
 		}
 		// checking for nice sample rate...
 		cli();
-		uint16_t td = (pulse.samp[i] - pulse.base[i]);
+		uint16_t td = (TCC4_CNT - pulse.base[i]);
 		if (td >= SAMPLETIME) {
 			// ok, eat it
 			process_hz(i);

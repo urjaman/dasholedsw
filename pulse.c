@@ -64,7 +64,7 @@ static void process_hz(uint8_t ch) {
 	if (!td) { // what?
 		return;
 	}
-	pulse_hz[ch] = (((((uint32_t)TIMER_HZ) << HZ_SHIFT) * (c-1))+(td/2)) / td;
+	pulse_hz[ch] = ( ( (((uint32_t)TIMER_HZ) << HZ_SHIFT) * (c-1) ) + (td/2) ) / td;
 	last_out[ch] = read_tcc(); // used to remember to zero idle channels
 }
 
@@ -96,6 +96,23 @@ ISR(TCC4_CCD_vect, FLATTEN ) {
 	tcc4_cc(3, TCC4_CCD);
 }
 
+
+//#define F_DEBUG
+
+#ifdef F_DEBUG
+ISR(TCD5_OVF_vect) {
+	VPORT1_OUT ^= _BV(7);
+	TCD5_INTFLAGS = 0x01;
+}
+
+static void debug_setup(void) {
+	TCD5_PER = 50000 - 1;
+	TCD5_CTRLA = TC45_CLKSEL_DIV1_gc;
+	TCD5_INTCTRLA = 3;
+	VPORT1_DIR |= _BV(7);
+}
+#endif
+
 void pulse_init(void) {
 	TCC4_PER = 0xFFFF;
 
@@ -115,6 +132,10 @@ void pulse_init(void) {
 
 	/* Default RPM to falling trigger. */
 	pulse_set_ch_mode(PCH_RPM, PM_FALLING);
+
+#ifdef F_DEBUG
+	debug_setup();
+#endif
 
 }
 

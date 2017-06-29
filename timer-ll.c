@@ -33,18 +33,18 @@ ISR(RTC_COMP_vect, ISR_NAKED) {
 	"in r1, __SREG__\n\t"
 	"push r24\n\t"
 	"push r25\n\t"
-	"lds r24, %0\n\t" // CNTL
-	"lds r25, %0+1\n\t" // CNTH
+	"lds r24, %0\n\t" // COMPL
+	"lds r25, %0+1\n\t" // COMPH
 	"adiw r24, 4\n\t"
 	"andi r25, 0x7F\n\t"
-	"sts %1, r24\n\t" // COMPL
-	"sts %1+1, r25\n\t" // COMPH
+	"sts %0, r24\n\t" // COMPL
+	"sts %0+1, r25\n\t" // COMPH
 	"pop r25\n\t"
 	"pop r24\n\t"
 	"out __SREG__, r1\n\t"
 	"pop r1\n\t"
 	"reti\n\t"
-	:: "m" (RTC_CNT), "m" (RTC_COMP)
+	:: "m" (RTC_COMP)
 	);
 }
 
@@ -63,9 +63,10 @@ uint16_t timer_get_subsectimer(void) {
 
 static void run_dfll(uint8_t src)
 {
+	const uint16_t comp = 31250;
 	OSC_DFLLCTRL = src;
-	DFLLRC32M_COMP2 = 0x7A;
-	DFLLRC32M_COMP1 = 0x12;
+	DFLLRC32M_COMP2 = comp >> 8;
+	DFLLRC32M_COMP1 = comp & 0xFF;
 	DFLLRC32M_CTRL = 1;
 }
 

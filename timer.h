@@ -28,7 +28,6 @@ uint16_t timer_get_lin_ss_u16(void);
 /* timer-ll.c is used to consolidate access to todo and subsectimer 
    to a single object */
 
-#define SSTC ((F_CPU+512)/1024)
-#define FCPUKHZ ((F_CPU+500)/1000)
-#define US_PER_SSUNIT ((1024000+(FCPUKHZ/2))/FCPUKHZ)
+#define SSTC (32768)
+#define US_PER_SSUNIT 31
 #endif

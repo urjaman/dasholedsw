@@ -1,6 +1,9 @@
 #include "main.h"
 #include "timer.h"
 
+#define HAS_EX32K
+
+
 extern uint8_t timer_waiting;
 volatile uint8_t timer_run_todo=0;
 #define S(s) str(s)
@@ -8,32 +11,15 @@ volatile uint8_t timer_run_todo=0;
 #define VL (((F_CPU+512)/1024)&0xFF)
 #define VH (((F_CPU+512)/1024)/256)
 
-ISR(TCD5_OVF_vect, ISR_NAKED) {
+
+ISR(RTC_OVF_vect, ISR_NAKED) {
 	asm volatile (
-	".lcomm subsectimer,2\n\t"
 	"push r1\n\t"
 	"in r1, __SREG__\n\t"
 	"push r24\n\t"
-	"push r25\n\t"
-	"lds r24, subsectimer\n\t"
-	"lds r25, subsectimer+1\n\t"
-	"adiw r24, 1\n\t"
-	"sts subsectimer, r24\n\t"
-	"sts subsectimer+1, r25\n\t"
-	"cpi r24, " S(VL) "\n\t"
-	"ldi r24, " S(VH) "\n\t"
-	"cpc r25, r24\n\t"
-	"brcs 1f\n\t"
 	"lds r24, timer_run_todo\n\t"
 	"inc r24\n\t"
 	"sts timer_run_todo, r24\n\t"
-	"clr r24\n\t"
-	"sts subsectimer, r24\n\t"
-	"sts subsectimer+1, r24\n\t"
-	"1:\n\t"
-	"ldi r24, 0x01\n\t"
-	"sts 0x094C, r24\n\t" /* TCD5_INTFLAGS */
-	"pop r25\n\t"
 	"pop r24\n\t"
 	"out __SREG__, r1\n\t"
 	"pop r1\n\t"
@@ -41,24 +27,76 @@ ISR(TCD5_OVF_vect, ISR_NAKED) {
 	::);
 }
 
+ISR(RTC_COMP_vect, ISR_NAKED) {
+	asm volatile (
+	"push r1\n\t"
+	"in r1, __SREG__\n\t"
+	"push r24\n\t"
+	"push r25\n\t"
+	"lds r24, %0\n\t" // CNTL
+	"lds r25, %0+1\n\t" // CNTH
+	"adiw r24, 4\n\t"
+	"andi r25, 0x7F\n\t"
+	"sts %1, r24\n\t" // COMPL
+	"sts %1+1, r25\n\t" // COMPH
+	"pop r25\n\t"
+	"pop r24\n\t"
+	"out __SREG__, r1\n\t"
+	"pop r1\n\t"
+	"reti\n\t"
+	:: "m" (RTC_CNT), "m" (RTC_COMP)
+	);
+}
+
+
 uint16_t timer_get_subsectimer(void) {
 	uint16_t rv;
 	asm (
 	"cli\n\t"
-	"lds %A0,subsectimer\n\t"
+	"lds %A0, %1\n\t" // CNTL
 	"sei\n\t"
-	"lds %B0,subsectimer+1\n\t"
+	"lds %B0, %1+1\n\t" // CNTH
 	: "=r" (rv)
-	: );
+	: "m" (RTC_CNT) );
 	return rv;
+}
+
+static void run_dfll(uint8_t src)
+{
+	OSC_DFLLCTRL = src;
+	DFLLRC32M_COMP2 = 0x7A;
+	DFLLRC32M_COMP1 = 0x12;
+	DFLLRC32M_CTRL = 1;
 }
 
 void timer_init(void) {
 	timer_run_todo=0;
 	timer_waiting=1;
-	TCD5_PER = 1023;
-	TCD5_CTRLA = TC45_CLKSEL_DIV1_gc;
-	TCD5_INTCTRLA = 0x3; /* High level for now ... */
+
+	OSC_CTRL |= OSC_RC32KEN_bm; //enable internal 32kHz oscillator
+#ifdef HAS_EX32K
+	OSC_XOSCCTRL = OSC_XOSCSEL_32KHz_gc;
+	OSC_CTRL |= OSC_XOSCEN_bm; //enable external 32kHz oscillator
+#endif
+	/* Pick the internal RC first, since i hear the external 32kHz has huge startup time */
+	uint8_t ready = 0;
+	do {
+		uint8_t s = OSC_STATUS;
+		if (s & OSC_RC32KRDY_bm) ready = CLK_RTCSRC_RCOSC32_gc;
+	} while (!ready);
+	CLK_RTCCTRL = ready | CLK_RTCEN_bm;
+
+	RTC_INTFLAGS = 3;
+	RTC_INTCTRL = 0xF;
+	RTC_PER = 32768 - 1;
+	RTC_CNT = 0;
+	RTC_COMP = 4;
+	RTC_CTRL = 1; // DIV1
+
+#ifndef HAS_EX32K
+	run_dfll(OSC_RC32MCREF_RC32K_gc);
+#endif
+
 }
 
 uint8_t timer_getdec_todo(void) {
@@ -67,6 +105,20 @@ uint8_t timer_getdec_todo(void) {
 	rv = timer_run_todo;
 	if (rv) timer_run_todo = rv-1;
 	sei();
+#ifdef HAS_EX32K
+	if (rv) {
+		/* If we're not already running on the TOSC, check if we can ... */
+		if (CLK_RTCCTRL != (CLK_RTCSRC_TOSC32_gc | CLK_RTCEN_bm)) {
+			if (OSC_STATUS & OSC_XOSCRDY_bm) { // and the 32kHz ext crystal is ready
+				CLK_RTCCTRL = CLK_RTCSRC_TOSC32_gc | CLK_RTCEN_bm;
+				/* OK, switch off the internal 32kHz RC, thanks for your services :) */
+				OSC_CTRL &= ~OSC_RC32KEN_bm;
+				/* Switch on the DFLL to calibrate the 32Mhz RC. */
+				run_dfll(OSC_RC32MCREF_XOSC32K_gc);
+			}
+		}
+	}
+#endif
 	return rv;
 }
 
@@ -86,11 +138,11 @@ uint16_t timer_get_lin_ss_u16(void) {
 	cli();
 	todo = timer_run_todo;
 	asm (
-	"lds %A0,subsectimer\n\t"
+	"lds %A0, %1\n\t" // CNTL
 	"sei\n\t"
-	"lds %B0,subsectimer+1\n\t"
+	"lds %B0, %1+1\n\t" // CNTH
 	: "=r" (sstimer)
-	: );
+	: "m" (RTC_CNT) );
 	if (likely(!todo)) return sstimer;
 	if (likely(todo==1)) {
 		return SSTC+sstimer;

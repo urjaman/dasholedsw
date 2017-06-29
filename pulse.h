@@ -4,7 +4,7 @@
 #define PULSE_HZ_SHIFT 4
 
 /* The age output is specified in units of this. */
-#define PULSE_TIMER_HZ (F_CPU/1024)
+#define PULSE_TIMER_HZ 8192
 
 enum pulse_ch {
 	PCH_DAUX = 4,

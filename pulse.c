@@ -99,16 +99,22 @@ ISR(TCC4_CCD_vect, FLATTEN ) {
 void pulse_init(void) {
 	TCC4_PER = 0xFFFF;
 
-	TCC4_CTRLD = 0b1000 | 4; // Events 4-7
+	TCC4_CTRLD = TC45_EVSEL_CH4_gc; // Events 4-7
 	TCC4_CTRLE = 0b10101010;
 
-	EVSYS_CH4MUX = 0x64; /* Port C pin 4 and so on. */
-	EVSYS_CH5MUX = 0x65;
-	EVSYS_CH6MUX = 0x66;
-	EVSYS_CH7MUX = 0x67;
+	/* Pull 8192Hz from the RTC compare updates. */
+	EVSYS_CH3MUX = EVSYS_CHMUX_RTC_CMP_gc;
 
-	TCC4_CTRLA = TC45_CLKSEL_DIV1024_gc;
+	EVSYS_CH4MUX = EVSYS_CHMUX_PORTC_PIN4_gc; /* Port C pin 4 and so on. */
+	EVSYS_CH5MUX = EVSYS_CHMUX_PORTC_PIN5_gc;
+	EVSYS_CH6MUX = EVSYS_CHMUX_PORTC_PIN6_gc;
+	EVSYS_CH7MUX = EVSYS_CHMUX_PORTC_PIN7_gc;
+
+	TCC4_CTRLA = TC45_CLKSEL_EVCH3_gc;
 	TCC4_INTCTRLB = 0xFF;
+
+	/* Default RPM to falling trigger. */
+	pulse_set_ch_mode(PCH_RPM, PM_FALLING);
 
 }
 

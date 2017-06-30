@@ -35,18 +35,35 @@ struct mod_info {
 	uint8_t y;
 };
 
+static uint8_t tui_mod_cnt;
+
 struct tui_modsave {
 	struct mod_info mods[TUI_MODS_MAX];
-	uint8_t tui_mod_cnt;
 } tm;
 
 uint8_t tui_mods_save(void**ptr) {
+	/* We save EEPROM by encoding the mod cnt into the size :) */
+	/* This also makes it easy to change TUI_MODS_MAX. */
 	*ptr = &tm;
-	return sizeof(struct tui_modsave);
+	return sizeof(struct mod_info) * tui_mod_cnt;
 }
 
 void tui_mods_load(void *b, uint8_t sz) {
-	if (sz != sizeof(struct tui_modsave)) return; // sorry, no.
+	uint8_t *ub = b;
+	uint8_t cnt = sz / sizeof(struct mod_info);
+
+	uint8_t rm;
+	/* This detects the old format with the appended mod cnt */
+	if ((rm = (sz % sizeof(struct mod_info)) )) {
+		if (rm != 1) return; /* Nope. */
+		cnt = ub[sz-1];
+		if ((cnt * sizeof(struct mod_info)) > sz) return; /* Nope 2. */
+		if (cnt > TUI_MODS_MAX) cnt = TUI_MODS_MAX;
+		sz = cnt * sizeof(struct mod_info); /* Only take so much. */
+	}
+
+	if (cnt > TUI_MODS_MAX) cnt = TUI_MODS_MAX;
+	tui_mod_cnt = cnt;
 	memcpy(&tm, b, sz);
 }
 
@@ -54,7 +71,7 @@ void tui_draw_mods(uint8_t page)
 {
 	/* Dont clear because that might flicker the lcd unnecessarily as we re-draw. */
 	/* Modules are required to draw their entire area. */
-	for (uint8_t i=0; i<tm.tui_mod_cnt; i++) {
+	for (uint8_t i=0; i<tui_mod_cnt; i++) {
 		uint8_t p = tm.mods[i].y >> TUI_MOD_PAGE_SHIFT;
 		if (p != page) continue;
 		uint8_t y = tm.mods[i].y & TUI_MOD_Y_MASK;
@@ -69,7 +86,7 @@ void tui_draw_mods(uint8_t page)
 uint8_t tui_mods_pages(void)
 {
 	uint8_t mp = 0;
-	for (uint8_t i=0; i<tm.tui_mod_cnt; i++) {
+	for (uint8_t i=0; i<tui_mod_cnt; i++) {
 		uint8_t p = tm.mods[i].y >> TUI_MOD_PAGE_SHIFT;
 		if (p > mp) mp = p;
 	}
@@ -117,7 +134,7 @@ static uint8_t tui_edit_mod(uint8_t idx)
 		uint8_t inhabited[LCDWIDTH * ((LCD_MAXY+7) / 8)] = {};
 		uint8_t lcdb[LCDWIDTH];
 		// we draw all other mods as boxes and record the areas they inhabit.
-		for (uint8_t i=0; i<tm.tui_mod_cnt; i++) {
+		for (uint8_t i=0; i<tui_mod_cnt; i++) {
 			if (i==idx) continue; // all other...
 			if ((tm.mods[i].y >> TUI_MOD_PAGE_SHIFT) != np) continue; /* only this page */
 			uint8_t w = pgm_read_byte(&(tuidb[tm.mods[i].dbid].width));
@@ -237,8 +254,8 @@ static void tui_mod_menu(uint8_t idx)
 {
 	uint8_t sel = tui_gen_listmenu(PSTR("Module Menu"), tui_tmm_table, 3, 0);
 	if (sel == 1) { // delete
-		for (uint8_t n=idx; n<(tm.tui_mod_cnt-1); n++) tm.mods[n] = tm.mods[n+1];
-		tm.tui_mod_cnt--;
+		for (uint8_t n=idx; n<(tui_mod_cnt-1); n++) tm.mods[n] = tm.mods[n+1];
+		tui_mod_cnt--;
 		return;
 	}
 	if (sel == 0) {
@@ -249,9 +266,9 @@ static void tui_mod_menu(uint8_t idx)
 
 static void tui_mlist_printer(uint8_t id)
 {
-	if (id==tm.tui_mod_cnt) {
+	if (id==tui_mod_cnt) {
 		lcd_puts_dw_P(PSTR("Add new.."));
-	} else if (id==tm.tui_mod_cnt+1) {
+	} else if (id==tui_mod_cnt+1) {
 		lcd_puts_dw_P((PGM_P)tui_exit_menu);
 	} else {
 		uint8_t buf[32];
@@ -275,21 +292,21 @@ void tui_modules_editor(void)
 {
 	uint8_t mi = 0;
 	while (1) {
-		uint8_t cnt = tm.tui_mod_cnt + 2; // all the mods, then add new, then exit menu
+		uint8_t cnt = tui_mod_cnt + 2; // all the mods, then add new, then exit menu
 		int r = tui_enh_listmenu(PSTR("Module List"), tui_mlist_printer, cnt, mi);
 		if (r<0) return; // exit
 		mi = r;
 		if (mi>=cnt-1) { // exit
 			return;
 		} else if (mi==cnt-2) { // add new
-			if (tm.tui_mod_cnt >= TUI_MODS_MAX) {
+			if (tui_mod_cnt >= TUI_MODS_MAX) {
 				tui_gen_message(PSTR("Too Many"), PSTR("Modules :("));
 			} else {
 				struct mod_info n = { 0, 0, 0, 0 };
-				tm.mods[tm.tui_mod_cnt++] = n;
-				if (tui_edit_mod(tm.tui_mod_cnt-1)) {
+				tm.mods[tui_mod_cnt++] = n;
+				if (tui_edit_mod(tui_mod_cnt-1)) {
 					// canceled
-					tm.tui_mod_cnt--;
+					tui_mod_cnt--;
 				}
 			}
 		} else { // picked a module

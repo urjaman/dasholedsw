@@ -4,6 +4,7 @@
 #include "saver.h"
 #include "tui-mod.h"
 #include "adc.h"
+#include "speedo.h"
 #include <util/crc16.h>
 
 struct saver_userdb_entry {
@@ -16,6 +17,7 @@ static const struct saver_userdb_entry userdb[] PROGMEM = {
 	{ tui_mods_save, tui_mods_load, 'T' },
 	{ relay_save, relay_load, 'R' },
 	{ backlight_save, backlight_load, 'B' },
+	{ speedo_save, speedo_load, 'S' },
 };
 
 struct saver_mdat_header {

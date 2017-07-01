@@ -3,7 +3,7 @@
 /* Frequency is represented as 20.4 fixed point Hz. */
 #define PULSE_HZ_SHIFT 4
 
-/* The age output is specified in units of this. */
+/* The age & time outputs are specified in units of this. */
 #define PULSE_TIMER_HZ 8192
 
 enum pulse_ch {
@@ -20,8 +20,8 @@ void pulse_run(void);
 /* Return the state (0/1) and optionally edge counter of a pulse channel. */
 uint8_t pulse_state(const enum pulse_ch ch, uint16_t *edges);
 
-/* Just the edge counter... */
-uint16_t pulse_edge_ctr(const enum pulse_ch ch);
+/* Edge counter, optionally with a timestamp. */
+uint16_t pulse_edge_ctr(const enum pulse_ch ch, uint16_t *time);
 
 /* Return the computed frequency of a pulse channel :) (and optionally how old is this info) */
 uint24_t pulse_get_hz(const enum pulse_ch ch, uint16_t *age);

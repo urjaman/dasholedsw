@@ -188,9 +188,20 @@ uint8_t pulse_state(const enum pulse_ch ch, uint16_t *edges) {
 }
 
 
-uint16_t pulse_edge_ctr(const enum pulse_ch ch) {
+uint16_t pulse_edge_ctr(const enum pulse_ch ch, uint16_t *time) {
 	const uint8_t ich = ch-4;
-	return read_cli_16b(&pulse.edge_counter[ich]);
+	if (time) {
+		uint16_t e1, e2, t;
+		do {
+			e1 = read_cli_16b(&pulse.edge_counter[ich]);
+			t = read_cli_16b(&pulse.samp[ich]);
+			e2 = read_cli_16b(&pulse.edge_counter[ich]);
+		} while (e1 != e2);
+		*time = t;
+		return e1;
+	} else {
+		return read_cli_16b(&pulse.edge_counter[ich]);
+	}
 }
 
 uint24_t pulse_get_hz(const enum pulse_ch ch, uint16_t *age) {

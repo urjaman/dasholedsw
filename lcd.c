@@ -37,27 +37,40 @@ void lcd_clear(void)
 	dp_clear_block(0, 0, LCDWIDTH, LCDHEIGHT/8);
 }
 
-void lcd_clear_dw(uint8_t w)
+static void lcd_clear_dw_dh(uint8_t w, uint8_t h)
 {
 	if ((lcdx+w)>LCDWIDTH) {
 		w = LCDWIDTH - lcdx;
 	}
-	dp_clear_block(lcdx, lcdy, w, 1);
+	dp_clear_block(lcdx, lcdy, w, h);
 	lcdx += w;
+}
+
+void lcd_clear_dw(uint8_t w)
+{
+	lcd_clear_dw_dh(w, 1);
+}
+
+void lcd_clear_big_dw(uint8_t w)
+{
+	lcd_clear_dw_dh(w, 2);
+}
+
+static void lcd_clear_eol_dh(uint8_t h)
+{
+	dp_clear_block(lcdx, lcdy, LCDWIDTH - lcdx, h);
+	lcdx = 0;
+	lcdy += h;
 }
 
 void lcd_clear_eol(void)
 {
-	lcd_clear_dw(LCDWIDTH - lcdx);
-	lcdx = 0;
-	lcdy++;
+	lcd_clear_eol_dh(1);
 }
 
 void lcd_clear_big_eol(void)
 {
-	dp_clear_block(lcdx, lcdy, LCDWIDTH - lcdx, 2);
-	lcdx = 0;
-	lcdy += 2;
+	lcd_clear_eol_dh(2);
 }
 
 void lcd_clear_eos(void)

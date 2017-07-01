@@ -8,6 +8,7 @@
 #include "pulse.h"
 #include "lib.h"
 #include "lcd.h"
+#include "speedo.h"
 
 int null_ps(uint8_t prv);
 int null_ps(uint8_t prv)
@@ -175,3 +176,27 @@ TUI_MOD(tui_pulsehz_mod,tui_pulsesel,"PULSE HZ",9*LCD_CHARW,1)
  	tui_modfinish(buf,n+2,x,9*LCD_CHARW);
 }
 
+
+TUI_MOD(tui_speedo_mod,null_ps,"SPEEDO", 6*LCD_CHARW,2)
+{
+	const uint8_t lcdw = 6*LCD_CHARW;
+	uint8_t buf[8];
+	uint16_t kmh = (speedo_get_kmh10()+5)/10;
+	if (kmh>999) kmh=999;
+	uint2str(buf,kmh);
+	uint8_t off = lcdw - lcd_strwidth_big(buf);
+	lcd_clear_big_dw(off);
+	lcd_puts_big(buf);
+}
+
+TUI_MOD(tui_big_speedo_mod,null_ps,"BIG SPEEDO", 12*LCD_CHARW, 4)
+{
+	const uint8_t lcdw = 12*LCD_CHARW;
+	uint8_t buf[8];
+	uint16_t kmh = (speedo_get_kmh10()+5)/10;
+	if (kmh>999) kmh=999;
+	uint2str(buf,kmh);
+	uint8_t off = lcdw - lcd_strwidth_dbig(buf);
+	lcd_clear_dbig_dw(off);
+	lcd_puts_dbig(buf);
+}

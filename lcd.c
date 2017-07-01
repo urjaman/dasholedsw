@@ -56,6 +56,11 @@ void lcd_clear_big_dw(uint8_t w)
 	lcd_clear_dw_dh(w, 2);
 }
 
+void lcd_clear_dbig_dw(uint8_t w)
+{
+	lcd_clear_dw_dh(w, 4);
+}
+
 static void lcd_clear_eol_dh(uint8_t h)
 {
 	dp_clear_block(lcdx, lcdy, LCDWIDTH - lcdx, h);
@@ -71,6 +76,11 @@ void lcd_clear_eol(void)
 void lcd_clear_big_eol(void)
 {
 	lcd_clear_eol_dh(2);
+}
+
+void lcd_clear_dbig_eol(void)
+{
+	lcd_clear_eol_dh(4);
 }
 
 void lcd_clear_eos(void)
@@ -145,6 +155,46 @@ static void lcd_putchar_big(unsigned char c)
 	lcdx += w*2;
 }
 
+
+static void lcd_putchar_dbig(unsigned char c)
+{
+	uint8_t buf[128];
+
+	PGM_P block;
+	if (c < 0x20) c = 0x20;
+	block = (const char*)&(my_font[c-0x20][0]);
+	uint8_t font_meta_b = pgm_read_byte(&(font_metadata[c-0x20]));
+	uint8_t w = DW(font_meta_b);
+	block += XOFF(font_meta_b);
+	if ((lcdx+(w*4))>LCDWIDTH) {
+		w = (LCDWIDTH - lcdx)/2;
+	}
+	for (uint8_t i=0; i<w; i++) {
+		uint8_t dat = pgm_read_byte(block);
+		block++;
+		uint8_t a = 0;
+		uint8_t b = 0;
+		uint8_t c = 0;
+		uint8_t d = 0;
+		for (uint8_t n=0; n<2; n++) {
+			a = a >> 4;
+			b = b >> 4;
+			c = c >> 4;
+			d = d >> 4;
+			if (dat & _BV(6+n)) a |= 0xF0;
+			if (dat & _BV(4+n)) b |= 0xF0;
+			if (dat & _BV(2+n)) c |= 0xF0;
+			if (dat & _BV(n))   d |= 0xF0;
+		}
+		memset(buf+i*4, a, 4);
+		memset(buf+(w+i)*4, b, 4);
+		memset(buf+(2*w+i)*4, c, 4);
+		memset(buf+(3*w+i)*4, d, 4);
+	}
+	dp_write_block(buf, lcdx, lcdy, w*4, 4);
+	lcdx += w*4;
+}
+
 static uint8_t lcd_dw_charw(uint8_t c)
 {
 	if (c < 0x20) c = 0x20;
@@ -183,6 +233,17 @@ uint8_t lcd_strwidth_big(const unsigned char * str)
 uint8_t lcd_strwidth_big_P(PGM_P str)
 {
 	return lcd_strwidth_P(str)*2;
+}
+
+/* dbig = 4x small, but dont tell the user ;) */
+uint8_t lcd_strwidth_dbig(const unsigned char * str)
+{
+	return lcd_strwidth(str)*4;
+}
+
+uint8_t lcd_strwidth_dbig_P(PGM_P str)
+{
+	return lcd_strwidth_P(str)*4;
 }
 
 void lcd_putchar(unsigned char c)
@@ -245,6 +306,26 @@ void lcd_puts_big(const unsigned char * str)
 {
 start:
 	if (*str) lcd_putchar_big(*str);
+	else return;
+	str++;
+	goto start;
+}
+
+void lcd_puts_dbig_P(PGM_P str)
+{
+	unsigned char c;
+start:
+	c = pgm_read_byte(str);
+	if (c) lcd_putchar_dbig(c);
+	else return;
+	str++;
+	goto start;
+}
+
+void lcd_puts_dbig(const unsigned char * str)
+{
+start:
+	if (*str) lcd_putchar_dbig(*str);
 	else return;
 	str++;
 	goto start;

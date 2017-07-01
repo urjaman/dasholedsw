@@ -55,5 +55,15 @@ void lcd_clear_eos(void); /* clear to end of screen */
 
 void lcd_clear_big_eol(void); /* clear to end of big line */
 
+/* Double-Big. */
+void lcd_puts_dbig(const unsigned char * str);
+void lcd_puts_dbig_P(PGM_P str);
+
+uint8_t lcd_strwidth_dbig(const unsigned char*str);
+uint8_t lcd_strwidth_dbig_P(PGM_P str);
+
+void lcd_clear_dbig_dw(uint8_t w);
+void lcd_clear_dbig_eol(void); /* clear to end of big line */
+
 /* HUGE. */
 void lcd_huge_char(uint8_t c);

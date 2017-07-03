@@ -13,7 +13,7 @@
 #include "tui.h"
 #include "pulse.h"
 #include "saver.h"
-
+#include "eecounter.h"
 
 #ifdef ENABLE_UARTIF
 #define RECVBUFLEN 64
@@ -46,6 +46,7 @@ void mini_mainloop(void)
 	backlight_run();
 	relay_run();
 	pulse_run();
+	eec_run();
 	uartif_run();
 }
 
@@ -96,6 +97,7 @@ void main(void)
 	adc_init();
 	relay_init();
 	pulse_init();
+	eec_init();
 	tui_init();
 	saver_load_settings(); // we load, but dont report errors
 	PMIC_CTRL = 0x87;

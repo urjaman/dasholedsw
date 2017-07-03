@@ -41,7 +41,7 @@ struct saver_settings {
 #define SETTINGS_OFFSET (32)
 #define DATA_OFFSET (SETTINGS_OFFSET+sizeof(struct saver_settings))
 
-static uint16_t crc16(uint16_t crc_in, const void *bufv, uint16_t cnt) {
+uint16_t crc16(uint16_t crc_in, const void *bufv, uint16_t cnt) {
 	const uint8_t *b = bufv;
 	for(uint16_t i=0;i < cnt; i++) {
 		crc_in = _crc16_update(crc_in, b[i]);

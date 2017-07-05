@@ -14,6 +14,7 @@
 #include "pulse.h"
 #include "saver.h"
 #include "eecounter.h"
+#include "odo.h"
 
 #ifdef ENABLE_UARTIF
 #define RECVBUFLEN 64
@@ -46,6 +47,7 @@ void mini_mainloop(void)
 	backlight_run();
 	relay_run();
 	pulse_run();
+	odo_run();
 	eec_run();
 	uartif_run();
 }
@@ -98,6 +100,7 @@ void main(void)
 	relay_init();
 	pulse_init();
 	eec_init();
+	odo_init();
 	tui_init();
 	saver_load_settings(); // we load, but dont report errors
 	PMIC_CTRL = 0x87;

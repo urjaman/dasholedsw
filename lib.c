@@ -99,6 +99,20 @@ uint8_t luint2str(unsigned char *buf, uint32_t val)
 	return strlen((char*)buf);
 }
 
+uint8_t luint2str_zp(uint8_t *buf, uint32_t val, uint8_t width)
+{
+	uint8_t rp=0;
+	uint32_t comp = 10;
+	for (uint8_t i=1;i<width;i++) {
+		comp *= 10;
+		if (val < comp) {
+			*buf++ = '0';
+			rp++;
+		}
+	}
+	return rp+luint2str(buf,val);
+}
+
 uint8_t luint2xstr(unsigned char *buf, uint32_t val)
 {
 	ultoa(val,(char*)buf,16);

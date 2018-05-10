@@ -97,7 +97,7 @@ ISR(TCC4_CCD_vect, FLATTEN ) {
 }
 
 
-#define F_DEBUG
+//#define F_DEBUG
 
 #ifdef F_DEBUG
 ISR(TCD5_OVF_vect) {

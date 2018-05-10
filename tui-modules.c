@@ -204,7 +204,6 @@ TUI_MOD(tui_big_speedo_mod,null_ps,"BIG SPEEDO", 12*LCD_CHARW, 4)
 
 TUI_MOD(tui_odometer_mod,null_ps,"ODOMETER", 12*LCD_CHARW, 4)
 {
-	const uint8_t lcdw = 12*LCD_CHARW;
 	uint8_t buf[8];
 	uint32_t m = odo_get(NULL);
 	uint24_t km = m/1000;
@@ -213,17 +212,16 @@ TUI_MOD(tui_odometer_mod,null_ps,"ODOMETER", 12*LCD_CHARW, 4)
 	luint2str_zp(buf, km, 6);
 	lcd_puts_big(buf);
 	lcd_gotoxy_dw(x,y+2);
-	buf[0] = '.';
-	luint2str_zp(buf+1, m, 3);
+
+	luint2str_zp(buf, m, 3);
 	lcd_puts(buf);
+
 	PGM_P kms = PSTR("KM");
-	uint8_t kmsw = lcd_strwidth_big_P(kms);
-	uint8_t bufw = lcd_strwidth(buf);
-	uint8_t w1 = (lcdw - kmsw)/2;
-	uint8_t w2 = w1 - bufw;
-	lcd_clear_dw(w2);
+	uint8_t skip = 1*LCD_CHARW;
+	lcd_clear_big_dw(skip);
 	lcd_puts_big_P(kms);
-	lcd_clear_big_dw(lcdw - kmsw - w1);
+	lcd_clear_big_eol();
+
 	lcd_gotoxy_dw(x,y+3);
-	lcd_clear_dw(w1);
+	lcd_clear_dw(4*LCD_CHARW);
 }

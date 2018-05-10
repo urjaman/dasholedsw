@@ -189,7 +189,7 @@ void dp_init(void)
 	command(SSD1331_CMD_DISPLAYON);	//--turn on oled panel
 }
 
-static uint16_t dp_fg=dp_get_color(0,0,255), dp_bg=dp_get_color(0,0,0);
+static uint16_t dp_fg=dp_get_color(0,255,255), dp_bg=dp_get_color(0,0,0);
 
 void dp_set_fg_bg(uint16_t fg, uint16_t bg)
 {

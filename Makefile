@@ -12,7 +12,7 @@ AVRDUDECMD=avrdude -p $(AVRDUDEMCU) -c atmelice_pdi
 DFLAGS=
 CFLAGS=-mmcu=$(MMCU) -Os -g -Wall -W -pipe -mcall-prologues -std=gnu99 -Wno-main $(DFLAGS)
 
-all: $(PROJECT).hex
+all: $(PROJECT).hex size
 
 $(PROJECT).hex: $(PROJECT).out
 	$(AVRBINDIR)$(OBJCOPY) -j .text -j .data -O ihex $(PROJECT).out $(PROJECT).hex

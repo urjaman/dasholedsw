@@ -101,16 +101,18 @@ uint8_t luint2str(unsigned char *buf, uint32_t val)
 
 uint8_t luint2str_zp(uint8_t *buf, uint32_t val, uint8_t width)
 {
-	uint8_t rp=0;
-	uint32_t comp = 10;
-	for (uint8_t i=1;i<width;i++) {
-		comp *= 10;
-		if (val < comp) {
-			*buf++ = '0';
-			rp++;
-		}
+	uint8_t vw = 1;
+	uint32_t vc = 10;
+	while (vc < val) {
+		vc *= 10;
+		vw++;
 	}
-	return rp+luint2str(buf,val);
+	uint8_t xw = width - vw;
+	if (vw > width) xw = 0;
+	if (xw) {
+		memset(buf, '0', xw);
+	}
+	return xw+luint2str(buf+xw,val);
 }
 
 uint8_t luint2xstr(unsigned char *buf, uint32_t val)

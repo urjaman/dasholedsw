@@ -1,0 +1,25 @@
+I suppose i need a mission statement for this thing :P
+
+It's a lil car widget, where the firmware is derived from a previous car widget (carlcdp).
+Previously the mission was to:
+- display two voltages
+- control a relay based on a voltage
+
+Other things were bonus features, like the temperature display, clock and whatnot things
+
+This device has a mission to take in data:
+- RPM pulse
+- speedometer pulse
+- fuel sensor voltage
+(other things too, but those are bonus)
+
+and process it into features:
+- odometer 
+ - trip meter
+- speedometer
+- RPM display
+
+- fuel level display 
+ - longer-scale derived displays like l/100km
+
+(again, other things too, but these are the primary ones)

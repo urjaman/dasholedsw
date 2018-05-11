@@ -39,12 +39,16 @@ void tui_gen_menuheader(PGM_P header)
 	uint8_t banner[LCDWIDTH/2];
 
 	for (uint8_t i=0; i<LCDWIDTH/2; i++) banner[i] = i&1?0x89:0x91;
+	tui_set_color(TTC_HEAD2);
 	lcd_gotoxy_dw(0,0);
 	lcd_write_dwb(banner, banw1);
+	tui_set_color(TTC_HEAD1);
 	lcd_clear_dw(clrw1);
 	lcd_puts_dw_P(header);
 	lcd_clear_dw(clrw2);
+	tui_set_color(TTC_HEAD2);
 	lcd_write_dwb(banner, banw2);
+	tui_default_color();
 }
 
 int32_t tui_gen_adjmenu(PGM_P header, printval_func_t *printer, int32_t min, int32_t max, int32_t start,
@@ -65,9 +69,11 @@ int32_t tui_gen_adjmenu(PGM_P header, printval_func_t *printer, int32_t min, int
 		lcd_puts_dw(buf);
 		lcd_clear_eol();
 		if (lbm) {
+			tui_set_color(TTC_LN2);
 			lcd_gotoxy_dw(0,2);
 			lcd_puts_dw_P(lbm==2?PSTR("DIR: NEXT"):PSTR("DIR: PREV"));
 			lcd_clear_eol();
+			tui_unset_color();
 		}
 		lcd_clear_eos();
 		if (lbm) {
@@ -128,11 +134,17 @@ int tui_enh_listmenu(PGM_P header, listprint_func_t *printer, uint8_t entries, u
 		uint8_t vi = idx - vbp;
 		for (uint8_t bp=0; bp<brackl; bp++) {
 			lcd_gotoxy_dw(0, bp+1);
-			if (bp==vbp) lcd_puts_dw_P(idstr);
-			else lcd_clear_dw(idw);
+			if (bp==vbp) {
+				tui_set_color(vi&1 ? TTC_HL2 : TTC_HL1);
+				lcd_puts_dw_P(idstr);
+			} else {
+				tui_set_color(vi&1 ? TTC_LN2 : TTC_LN1);
+				lcd_clear_dw(idw);
+			}
 			printer(vi);
 			vi++;
 		}
+		tui_default_color();
 		lcd_clear_eos();
 		timer_delay_ms(50);
 		uint8_t key = tui_waitforkey();

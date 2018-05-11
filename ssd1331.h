@@ -70,9 +70,13 @@ void dp_clear_block(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 
 #define DP_HAS_COLOR
 
+typedef uint16_t color_t;
+
 #define dp_get_color(r,g,b) ((((r)<<8)&0xF800) | (((g)<<3)&0x07E0) | ((b)>>3))
+#define rgb(r,g,b) dp_get_color(r,g,b)
+
 //uint16_t dp_get_color(uint8_t r, uint8_t g, uint8_t b);
-void dp_set_fg_bg(uint16_t fg, uint16_t bg);
+void dp_set_fg_bg(color_t fg, color_t bg);
 
 #define DP_HAS_BL
 void dp_set_bl(uint8_t bl);

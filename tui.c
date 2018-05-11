@@ -32,6 +32,7 @@ static void tui_draw_mainpage(uint8_t forced)
 
 void tui_init(void)
 {
+	tui_init_themes();
 	lcd_clear();
 	tui_draw_mainpage(0);
 }
@@ -95,11 +96,14 @@ const unsigned char tui_blsm_s1[] PROGMEM = "Brightness";
 const unsigned char tui_blsm_s2[] PROGMEM = "Drv Bright";
 const unsigned char tui_blsm_s3[] PROGMEM = "Always Drv";
 const unsigned char tui_blsm_s4[] PROGMEM = "Timeout";
+const unsigned char tui_blsm_s5[] PROGMEM = "Theme";
+
 PGM_P const tui_blsm_table[] PROGMEM = { // BL Settings Menu
 	(PGM_P)tui_blsm_s1,
 	(PGM_P)tui_blsm_s2,
 	(PGM_P)tui_blsm_s3,
 	(PGM_P)tui_blsm_s4,
+	(PGM_P)tui_blsm_s5,
 	(PGM_P)tui_exit_menu
 };
 
@@ -107,7 +111,7 @@ static void tui_blsettingmenu(void)
 {
 	uint8_t sel = 0;
 	for(;;) {
-		sel = tui_gen_listmenu((PGM_P)tui_blsm_name, tui_blsm_table, 5, sel);
+		sel = tui_gen_listmenu((PGM_P)tui_blsm_name, tui_blsm_table, 6, sel);
 		switch (sel) {
 			case 0: {
 				uint8_t v = tui_gen_nummenu((PGM_P)tui_blsm_s1, 0, 16, backlight_get());
@@ -132,6 +136,10 @@ static void tui_blsettingmenu(void)
 				backlight_set_to(v);
 			}
 			break;
+
+			case 4:
+				tui_pick_theme();
+				break;
 
 			default:
 				return;

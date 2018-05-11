@@ -1,6 +1,8 @@
 #ifndef _TUI_LIB_H_
 #define _TUI_LIB_H_
 
+#include "tui-color.h"
+
 uint8_t tui_pollkey(void);
 uint8_t tui_waitforkey(void);
 void tui_gen_message(PGM_P l1, PGM_P l2);

@@ -75,28 +75,28 @@ static void tui_gbv_mod(uint8_t x, uint8_t c1, uint8_t c2, uint16_t v)
 	tui_modfinish(mb,8,x,8*LCD_CHARW);
 }
 
-TUI_MOD(tui_bv_mod,tui_adcsel,"VOLTS (AVG)",8*LCD_CHARW,1)
+TUI_MOD(tui_bv_mod,tui_adcsel,"Volts (AVG)",8*LCD_CHARW,1)
 {
 	tui_gbv_mod(x, tui_ch_char(par), ':', adc_read_ch(par));
 }
 
-TUI_MOD(tui_maxbv_mod,tui_adcsel,"VOLTS (MAX)",8*LCD_CHARW,1)
+TUI_MOD(tui_maxbv_mod,tui_adcsel,"Volts (MAX)",8*LCD_CHARW,1)
 {
 	tui_gbv_mod(x, tui_ch_char(par), '+', adc_read_maxv(par));
 }
 
-TUI_MOD(tui_minbv_mod,tui_adcsel,"VOLTS (MIN)",8*LCD_CHARW,1)
+TUI_MOD(tui_minbv_mod,tui_adcsel,"Volts (MIN)",8*LCD_CHARW,1)
 {
 	tui_gbv_mod(x, tui_ch_char(par), '-', adc_read_minv(par));
 }
 
-TUI_MOD(tui_ripple_mod,tui_adcsel,"RIPPLE",8*LCD_CHARW,1)
+TUI_MOD(tui_ripple_mod,tui_adcsel,"Ripple",8*LCD_CHARW,1)
 {
 	tui_gbv_mod(x, tui_ch_char(par), 'R', adc_read_maxv(par)-adc_read_minv(par));
 }
 
 
-TUI_MOD(tui_rlst_mod,null_ps,"RELAY STATE",5*LCD_CHARW,1)
+TUI_MOD(tui_rlst_mod,null_ps,"Relay Info",5*LCD_CHARW,1)
 {
 	uint8_t mb[6];
 	mb[0] = 'R';
@@ -142,13 +142,13 @@ static PGM_P const tui_pch_table[] PROGMEM = {
 int tui_pulsesel(uint8_t par);
 int tui_pulsesel(uint8_t par)
 {
-	par = tui_gen_listmenu(PSTR("PULSE CH"), tui_pch_table, 5, par);
+	par = tui_gen_listmenu(PSTR("Channel"), tui_pch_table, 5, par);
 	if (par >= 4) return -1;
 	return par;
 }
 
 
-TUI_MOD(tui_pstate_mod,tui_pulsesel,"PULSE STATE",8*LCD_CHARW,1)
+TUI_MOD(tui_pstate_mod,tui_pulsesel,"Edge Ctr",8*LCD_CHARW,1)
 {
 	uint8_t buf[9];
 	uint16_t e;
@@ -162,7 +162,7 @@ TUI_MOD(tui_pstate_mod,tui_pulsesel,"PULSE STATE",8*LCD_CHARW,1)
 	tui_modfinish(buf,8,x,8*LCD_CHARW);
 }
 
-TUI_MOD(tui_pulsehz_mod,tui_pulsesel,"PULSE HZ",9*LCD_CHARW,1)
+TUI_MOD(tui_pulsehz_mod,tui_pulsesel,"Freq",9*LCD_CHARW,1)
 {
 	uint8_t buf[10];
 	uint24_t hz = pulse_get_hz(par+4, NULL);
@@ -178,7 +178,7 @@ TUI_MOD(tui_pulsehz_mod,tui_pulsesel,"PULSE HZ",9*LCD_CHARW,1)
 }
 
 
-TUI_MOD(tui_speedo_mod,null_ps,"SPEEDO", 6*LCD_CHARW,2)
+TUI_MOD(tui_speedo_mod,null_ps,"Speedo", 6*LCD_CHARW,2)
 {
 	const uint8_t lcdw = 6*LCD_CHARW;
 	uint8_t buf[8];
@@ -190,7 +190,7 @@ TUI_MOD(tui_speedo_mod,null_ps,"SPEEDO", 6*LCD_CHARW,2)
 	lcd_puts_big(buf);
 }
 
-TUI_MOD(tui_big_speedo_mod,null_ps,"BIG SPEEDO", 12*LCD_CHARW, 4)
+TUI_MOD(tui_big_speedo_mod,null_ps,"Big Speedo", 12*LCD_CHARW, 4)
 {
 	const uint8_t lcdw = 12*LCD_CHARW;
 	uint8_t buf[8];

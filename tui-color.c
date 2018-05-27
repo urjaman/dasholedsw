@@ -40,11 +40,11 @@ void tui_default_color(void) {
 static const struct tui_theme tui_themes[2] PROGMEM = {
 	{ {	/* Default Theme */
 		{ rgb(  0,   0, 255), rgb(  0,   0,   0) }, // LN1
-		{ rgb( 33,  33, 255), rgb(  0,   0,  33) }, // LN2
+		{ rgb( 33,  33, 255), rgb(  0,   0,  15) }, // LN2
 		{ rgb(128,   0, 255), rgb(  0,   0,   0) }, // HL1
-		{ rgb(144,  33, 255), rgb( 16,   0,  33) }, // HL2
-		{ rgb(  0, 226, 128), rgb(  0,   0,   0) }, // HEAD1
-		{ rgb(226,  79,   0), rgb(  0,   0,   0) }  // HEAD2
+		{ rgb(144,  33, 255), rgb(  8,   0,  15) }, // HL2
+		{ rgb(  4, 255,  24), rgb(  0,   0,   0) }, // HEAD1
+		{ rgb(255,  32,  32), rgb(  0,   0,   0) }  // HEAD2
 	} },
 	{ {	/* Balls (to the wall) Theme */
 		{ rgb(226, 219,   0), rgb(  0,   0,   0) }, // LN1

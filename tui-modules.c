@@ -202,7 +202,7 @@ TUI_MOD(tui_big_speedo_mod,null_ps,"Big Speedo", 12*LCD_CHARW, 4)
 	lcd_puts_dbig(buf);
 }
 
-TUI_MOD(tui_odometer_mod,null_ps,"ODOMETER", 12*LCD_CHARW, 4)
+TUI_MOD(tui_odometer_mod,null_ps,"Odometer", 12*LCD_CHARW, 4)
 {
 	uint8_t buf[8];
 	uint32_t m = odo_get(NULL);
@@ -210,16 +210,20 @@ TUI_MOD(tui_odometer_mod,null_ps,"ODOMETER", 12*LCD_CHARW, 4)
 	m = m%1000;
 	if (km>999999) km %= 1000000;
 	luint2str_zp(buf, km, 6);
+	tui_set_color(TTC_HL1);
 	lcd_puts_big(buf);
-	lcd_gotoxy_dw(x,y+2);
+	tui_unset_color();
 
+	lcd_gotoxy_dw(x,y+2);
 	luint2str_zp(buf, m, 3);
 	lcd_puts(buf);
 
 	PGM_P kms = PSTR("KM");
 	uint8_t skip = 1*LCD_CHARW;
 	lcd_clear_big_dw(skip);
+	tui_set_color(TTC_HEAD1);
 	lcd_puts_big_P(kms);
+	tui_unset_color();
 	lcd_clear_big_eol();
 
 	lcd_gotoxy_dw(x,y+3);

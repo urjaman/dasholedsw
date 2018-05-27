@@ -83,3 +83,4 @@ void dp_set_bl(uint8_t bl);
 
 void dp_init(void);
 
+uint8_t dp_draw_tgif(const void *tgif, uint8_t x, uint8_t y, uint8_t w, uint8_t h);

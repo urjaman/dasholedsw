@@ -32,15 +32,34 @@ static void tui_draw_mainpage(uint8_t forced)
 
 void tui_init(void)
 {
+	extern char _binary_logo_bin_start[];
 	tui_init_themes();
-	lcd_clear();
-	tui_draw_mainpage(0);
+	//lcd_clear();
+	dp_draw_tgif(_binary_logo_bin_start,0,0,96,64);
+	//tui_draw_mainpage(0);
 }
 
 
 void tui_run(void)
 {
+	const uint8_t logo_time = 15;
+	static uint8_t boot_counter=0;
+
 	uint8_t k = buttons_get();
+	if (boot_counter<=logo_time) {
+		if (k) {
+			boot_counter = logo_time+1;
+		} else {
+			if (timer_get_1hzp()) boot_counter++;
+		}
+		if (boot_counter>logo_time) {
+			lcd_clear();
+			tui_draw_mainpage(0);
+		} else {
+			return;
+		}
+	}
+
 	if (k==BUTTON_OK) {
 		tui_mainmenu();
 		lcd_clear();

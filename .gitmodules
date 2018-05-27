@@ -1,0 +1,3 @@
+[submodule "tinygif"]
+	path = tinygif
+	url = git@github.com:urjaman/project-tinygif.git

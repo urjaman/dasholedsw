@@ -240,9 +240,50 @@ void dp_write_block_P(const PGM_P buffer, uint8_t x, uint8_t y, uint8_t w, uint8
 	}
 }
 
-void dp_clear_block(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+static void dp_clear_area(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 {
-	set_drawbox(x,y*8,w,h*8);
-	const uint16_t pixels = w*h*8;
+	set_drawbox(x,y,w,h);
+	const uint16_t pixels = w*h;
 	for (uint16_t i=0; i<pixels; i++) pixel(dp_bg);
 }
+
+void dp_clear_block(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+{
+	dp_clear_area(x,y*8,w,h*8);
+}
+
+/* TinyGif support */
+
+#include "tinygif/tdgif_lib.h"
+
+static TGifInfo* TGInfo;
+static void dp_tgif_cb(uint8_t idx) {
+	pixel(pgm_read_word(&(TGInfo->Colors[idx])));
+}
+
+uint8_t dp_draw_tgif(const void *tgif, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+{
+	/* Center a TGIF on a given xywh box, clear the overflow with bg color. */
+	TGifInfo Info;
+	if (TDGifGetInfo(tgif, &Info, w, h, 0xFFFF) == TGIF_ERROR) {
+		return Info.Error;
+	}
+	/* Overflows */
+	uint8_t t,b,l,r; /* top, bottom, left, right */
+	t = (h - Info.Height) / 2;
+	b = (h - Info.Height) - t;
+	l = (w - Info.Width) / 2;
+	r = (w - Info.Width) - l;
+	if (t) dp_clear_area(x, y, w, t);
+	if (b) dp_clear_area(x, y+t+Info.Height, w, b);
+	if (l) dp_clear_area(x, y+t, l, Info.Height);
+	if (r) dp_clear_area(x+l+Info.Width, y+t, r, Info.Height);
+
+	set_drawbox(x+l, y+t, Info.Width, Info.Height);
+
+	TGInfo = &Info;
+	TDGifDecompress(TGInfo, dp_tgif_cb);
+	TGInfo = NULL;
+	return Info.Error;
+}
+

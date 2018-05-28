@@ -109,45 +109,50 @@ static void spi_init(void) {
 
 #else
 
-ISR(USARTC0_TXC_vect) {
-	VPORT0_OUT |= _BV(6); // CS
-}
+//ISR(USARTC0_TXC_vect) {
+//	VPORT0_OUT |= _BV(6); // CS
+//}
 
 static void spi_init(void) {
 	USARTC0_CTRLC = USART_CMODE_MSPI_gc | _BV(1); /* UCPHA=1 */
 	USARTC0_BAUDCTRLA = 2;
 	PORTC.PIN1CTRL |= _BV(6); // INVEN
 	VPORT1_OUT &= ~_BV(1);
-	USARTC0_CTRLA = USART_TXCINTLVL_LO_gc;
+	//USARTC0_CTRLA = USART_TXCINTLVL_LO_gc;
 	USARTC0_CTRLB = USART_TXEN_bm;
 }
 
 static void spiwrite(uint8_t c) {
+	uint8_t s = SREG;
 	while (!(USARTC0_STATUS & USART_DREIF_bm));
 	cli();
 	VPORT0_OUT &= ~_BV(6); // ~CS
 	USARTC0_DATA = c;
-	sei();
 	USARTC0_STATUS = USART_TXCIF_bm;
+	SREG = s;
+}
+
+static void end_prev(void)
+{
+	if (!(VPORT0_OUT & _BV(6))) {
+		while (!(USARTC0_STATUS & USART_TXCIF_bm));
+		VPORT0_OUT |= _BV(6); // CS
+	}
 }
 
 static void command(uint8_t c)
 {
+	if (VPORT0_OUT & _BV(5)) end_prev();
 	// command
-	if (VPORT0_IN & _BV(5)) {
-		while (!(VPORT0_IN & _BV(6))); /* Wait for CS up by ISR. */
-		VPORT0_OUT &= ~_BV(5); // D/C
-	}
+	VPORT0_OUT &= ~_BV(5); // D/C
 	spiwrite(c);
 }
 
 static void pixel(uint16_t color)
 {
+	if (!(VPORT0_OUT & _BV(5))) end_prev();
 	// data
-	if (!(VPORT0_IN & _BV(5))) {
-		while (!(VPORT0_IN & _BV(6))); /* Wait for CS up by ISR. */
-		VPORT0_OUT |=  _BV(5); // D/C
-	}
+	VPORT0_OUT |=  _BV(5); // D/C
 	spiwrite(color >> 8);
 	spiwrite(color);
 }
@@ -198,6 +203,8 @@ void dp_init(void)
 	_delay_us(500);
 	VPORT1_OUT |= _BV(2);
 	_delay_us(500);
+
+	VPORT0_OUT |= _BV(6); // CS
 
 	// Initialization Sequence
 	command(SSD1331_CMD_DISPLAYOFF);  	// 0xAE

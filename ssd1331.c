@@ -18,110 +18,6 @@
 #include "main.h"
 #include "ssd1331.h"
 
-#if 0
-
-#define bld(to,bit_to) bld2(to,bit_to)
-#define bst(from,bit_from) bst2(from,bit_from)
-#define bld2(to,bit_to) asm("bld %0, " #bit_to "\n\t" : "+r" (to) :)
-#define bst2(from,bit_from) asm("bst %0, " #bit_from "\n\t" :: "r" (from))
-#define nop asm volatile("nop")
-
-#define SPI_PORT VPORT1_OUT
-#define SCLK 1
-#define SID 3
-
-// Provides F = F_CPU/6, 50/50 duty cycle
-// Note: if you have an ISR that touches this port, cli() this sequence.
-static void spiwrite(uint8_t c)
-{
-	uint8_t p = SPI_PORT & ~_BV(SCLK);
-	bst(c,7);
-	bld(p,SID);
-	SPI_PORT = p;
-	nop;
-	bst(c,6);
-	SPI_PORT |= _BV(SCLK);
-	nop;
-	bld(p,SID);
-	SPI_PORT = p;
-	nop;
-	bst(c,5);
-	SPI_PORT |= _BV(SCLK);
-	nop;
-	bld(p,SID);
-	SPI_PORT = p;
-	nop;
-	bst(c,4);
-	SPI_PORT |= _BV(SCLK);
-	nop;
-	bld(p,SID);
-	SPI_PORT = p;
-	nop;
-	bst(c,3);
-	SPI_PORT |= _BV(SCLK);
-	nop;
-	bld(p,SID);
-	SPI_PORT = p;
-	nop;
-	bst(c,2);
-	SPI_PORT |= _BV(SCLK);
-	nop;
-	bld(p,SID);
-	SPI_PORT = p;
-	nop;
-	bst(c,1);
-	SPI_PORT |= _BV(SCLK);
-	nop;
-	bld(p,SID);
-	SPI_PORT = p;
-	nop;
-	bst(c,0);
-	SPI_PORT |= _BV(SCLK);
-	nop;
-	bld(p,SID);
-	SPI_PORT = p;
-	nop;
-	nop;
-	SPI_PORT |= _BV(SCLK);
-}
-
-static void command(uint8_t c)
-{
-	// command
-	VPORT0_OUT &= ~_BV(5); // D/C
-	VPORT0_OUT &= ~_BV(6); // ~CS
-	spiwrite(c);
-	VPORT0_OUT |= _BV(6); // CS
-}
-
-static void pixel(uint16_t color)
-{
-	// data
-	VPORT0_OUT |=  _BV(5); // D/C
-	VPORT0_OUT &= ~_BV(6); // ~CS
-	spiwrite(color >> 8);
-	spiwrite(color);
-	VPORT0_OUT |= _BV(6); // CS
-}
-
-static void spi_init(void) {
-}
-
-#else
-
-//ISR(USARTC0_TXC_vect) {
-//	VPORT0_OUT |= _BV(6); // CS
-//}
-
-static void spi_init(void) {
-	USARTC0_CTRLC = USART_CMODE_MSPI_gc | _BV(1); /* UCPHA=1 */
-	USARTC0_BAUDCTRLA = 2;
-	PORTC.PIN1CTRL |= _BV(6); // INVEN
-	VPORT1_OUT &= ~_BV(1);
-	//USARTC0_CTRLA = USART_TXCINTLVL_LO_gc;
-	USARTC0_CTRLB = USART_TXEN_bm;
-}
-
 static void spiwrite(uint8_t c) {
 	uint8_t s = SREG;
 	while (!(USARTC0_STATUS & USART_DREIF_bm));
@@ -156,7 +52,6 @@ static void pixel(uint16_t color)
 	spiwrite(color >> 8);
 	spiwrite(color);
 }
-#endif
 
 
 static void set_drawbox(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
@@ -170,30 +65,22 @@ static void set_drawbox(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 	command(y+h-1);
 }
 
-#if 0
-uint16_t dp_get_color(uint8_t r, uint8_t g, uint8_t b)
-{
-	uint16_t c;
-	c = r >> 3;
-	c <<= 6;
-	c |= g >> 2;
-	c <<= 5;
-	c |= b >> 3;
-	return c;
-}
-#endif
-
 static uint8_t dp_last_bl = 0x07;
 
 void dp_init(void)
 {
-	// set pin directions
+	// set pin directions, etc.
+	PORTC.PIN1CTRL |= _BV(6); // Invert XCK
 	VPORT0_OUT |= _BV(6) | _BV(5);
 	VPORT0_DIR |= _BV(6) | _BV(5);
-	VPORT1_OUT |= _BV(3) | _BV(2) | _BV(1);
+	VPORT1_OUT |= _BV(3) | _BV(2);
+	VPORT1_OUT &= ~_BV(1);
 	VPORT1_DIR |= _BV(3) | _BV(2) | _BV(1);
 
-	spi_init();
+	// Init USART MSPIM
+	USARTC0_CTRLC = USART_CMODE_MSPI_gc | _BV(1); /* UCPHA=1 */
+	USARTC0_BAUDCTRLA = 2; /* F_CPU / (2*( _2_ +1)) = F_CPU/6 = 5.33 Mhz */
+	USARTC0_CTRLB = USART_TXEN_bm;
 
 	// Toggle RST low to reset; CS low so it'll listen to us
 	VPORT0_OUT &= ~_BV(6);

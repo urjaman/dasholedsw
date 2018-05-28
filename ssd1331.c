@@ -18,6 +18,8 @@
 #include "main.h"
 #include "ssd1331.h"
 
+#if 0
+
 #define bld(to,bit_to) bld2(to,bit_to)
 #define bst(from,bit_from) bst2(from,bit_from)
 #define bld2(to,bit_to) asm("bld %0, " #bit_to "\n\t" : "+r" (to) :)
@@ -102,6 +104,56 @@ static void pixel(uint16_t color)
 	VPORT0_OUT |= _BV(6); // CS
 }
 
+static void spi_init(void) {
+}
+
+#else
+
+ISR(USARTC0_TXC_vect) {
+	VPORT0_OUT |= _BV(6); // CS
+}
+
+static void spi_init(void) {
+	USARTC0_CTRLC = USART_CMODE_MSPI_gc | _BV(1); /* UCPHA=1 */
+	USARTC0_BAUDCTRLA = 2;
+	PORTC.PIN1CTRL |= _BV(6); // INVEN
+	VPORT1_OUT &= ~_BV(1);
+	USARTC0_CTRLA = USART_TXCINTLVL_LO_gc;
+	USARTC0_CTRLB = USART_TXEN_bm;
+}
+
+static void spiwrite(uint8_t c) {
+	while (!(USARTC0_STATUS & USART_DREIF_bm));
+	cli();
+	VPORT0_OUT &= ~_BV(6); // ~CS
+	USARTC0_DATA = c;
+	sei();
+	USARTC0_STATUS = USART_TXCIF_bm;
+}
+
+static void command(uint8_t c)
+{
+	// command
+	if (VPORT0_IN & _BV(5)) {
+		while (!(VPORT0_IN & _BV(6))); /* Wait for CS up by ISR. */
+		VPORT0_OUT &= ~_BV(5); // D/C
+	}
+	spiwrite(c);
+}
+
+static void pixel(uint16_t color)
+{
+	// data
+	if (!(VPORT0_IN & _BV(5))) {
+		while (!(VPORT0_IN & _BV(6))); /* Wait for CS up by ISR. */
+		VPORT0_OUT |=  _BV(5); // D/C
+	}
+	spiwrite(color >> 8);
+	spiwrite(color);
+}
+#endif
+
+
 static void set_drawbox(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 {
 	command(SSD1331_CMD_SETCOLUMN);
@@ -135,6 +187,8 @@ void dp_init(void)
 	VPORT0_DIR |= _BV(6) | _BV(5);
 	VPORT1_OUT |= _BV(3) | _BV(2) | _BV(1);
 	VPORT1_DIR |= _BV(3) | _BV(2) | _BV(1);
+
+	spi_init();
 
 	// Toggle RST low to reset; CS low so it'll listen to us
 	VPORT0_OUT &= ~_BV(6);

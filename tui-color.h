@@ -17,3 +17,6 @@ void tui_default_color(void);
 
 void tui_pick_theme(void);
 void tui_init_themes(void);
+
+uint8_t theme_save(void**ptr);
+void theme_load(void *b, uint8_t sz);

@@ -67,6 +67,46 @@ static void set_drawbox(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 
 static uint8_t dp_last_bl = 0x07;
 
+static const uint8_t initseq[] PROGMEM = {
+	SSD1331_CMD_DISPLAYOFF,  	// 0xAE
+	SSD1331_CMD_SETREMAP, 	// 0xA0
+	0x72,				// RGB Color (0x76 for BGR that we dont use)
+	SSD1331_CMD_STARTLINE, 	// 0xA1
+	0x0,
+	SSD1331_CMD_DISPLAYOFFSET, 	// 0xA2
+	0x0,
+	SSD1331_CMD_NORMALDISPLAY,  	// 0xA4
+	SSD1331_CMD_SETMULTIPLEX, 	// 0xA8
+	0x3F,  			// 0x3F 1/64 duty
+	SSD1331_CMD_SETMASTER,  	// 0xAD
+	0x8E,
+	SSD1331_CMD_POWERMODE,  	// 0xB0
+	0x0B,
+	SSD1331_CMD_PRECHARGE,  	// 0xB1
+	0x31,
+	SSD1331_CMD_CLOCKDIV,  	// 0xB3
+	0xF0,  // 7:4 = Oscillator Frequency, 3:0 = CLK Div Ratio (A[3:0]+1 = 1..16)
+	SSD1331_CMD_PRECHARGEA,  	// 0x8A
+	0x64,
+	SSD1331_CMD_PRECHARGEB,  	// 0x8B
+	0x78,
+	SSD1331_CMD_PRECHARGEA,  	// 0x8C
+	0x64,
+	SSD1331_CMD_PRECHARGELEVEL,  	// 0xBB
+	0x3A,
+	SSD1331_CMD_VCOMH,  		// 0xBE
+	0x3E,
+	SSD1331_CMD_MASTERCURRENT,  	// 0x87
+	0x06,
+	SSD1331_CMD_CONTRASTA,  	// 0x81
+	0x91,
+	SSD1331_CMD_CONTRASTB,  	// 0x82
+	0x50,
+	SSD1331_CMD_CONTRASTC,  	// 0x83
+	0x7D,
+	SSD1331_CMD_DISPLAYON	//--turn on oled panel
+};
+
 void dp_init(void)
 {
 	// set pin directions, etc.
@@ -93,48 +133,9 @@ void dp_init(void)
 
 	VPORT0_OUT |= _BV(6); // CS
 
-	// Initialization Sequence
-	command(SSD1331_CMD_DISPLAYOFF);  	// 0xAE
-	command(SSD1331_CMD_SETREMAP); 	// 0xA0
-#if defined SSD1331_COLORORDER_RGB
-	command(0x72);				// RGB Color
-#else
-	command(0x76);				// BGR Color
-#endif
-	command(SSD1331_CMD_STARTLINE); 	// 0xA1
-	command(0x0);
-	command(SSD1331_CMD_DISPLAYOFFSET); 	// 0xA2
-	command(0x0);
-	command(SSD1331_CMD_NORMALDISPLAY);  	// 0xA4
-	command(SSD1331_CMD_SETMULTIPLEX); 	// 0xA8
-	command(0x3F);  			// 0x3F 1/64 duty
-	command(SSD1331_CMD_SETMASTER);  	// 0xAD
-	command(0x8E);
-	command(SSD1331_CMD_POWERMODE);  	// 0xB0
-	command(0x0B);
-	command(SSD1331_CMD_PRECHARGE);  	// 0xB1
-	command(0x31);
-	command(SSD1331_CMD_CLOCKDIV);  	// 0xB3
-	command(0xF0);  // 7:4 = Oscillator Frequency, 3:0 = CLK Div Ratio (A[3:0]+1 = 1..16)
-	command(SSD1331_CMD_PRECHARGEA);  	// 0x8A
-	command(0x64);
-	command(SSD1331_CMD_PRECHARGEB);  	// 0x8B
-	command(0x78);
-	command(SSD1331_CMD_PRECHARGEA);  	// 0x8C
-	command(0x64);
-	command(SSD1331_CMD_PRECHARGELEVEL);  	// 0xBB
-	command(0x3A);
-	command(SSD1331_CMD_VCOMH);  		// 0xBE
-	command(0x3E);
-	command(SSD1331_CMD_MASTERCURRENT);  	// 0x87
-	command(0x06);
-	command(SSD1331_CMD_CONTRASTA);  	// 0x81
-	command(0x91);
-	command(SSD1331_CMD_CONTRASTB);  	// 0x82
-	command(0x50);
-	command(SSD1331_CMD_CONTRASTC);  	// 0x83
-	command(0x7D);
-	command(SSD1331_CMD_DISPLAYON);	//--turn on oled panel
+	for (uint8_t n=0;n<sizeof(initseq);n++) {
+		command(pgm_read_byte(initseq+n));
+	}
 }
 
 static uint16_t dp_fg=dp_get_color(0,255,255), dp_bg=dp_get_color(0,0,0);

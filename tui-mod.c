@@ -144,8 +144,8 @@ static uint8_t tui_edit_mod(uint8_t idx)
 				const uint8_t ihmark = _BV((iy+n)&7);
 				uint8_t * ihb = inhabited + tm.mods[i].x + ((iy+n)/8)*LCDWIDTH;
 				uint8_t idbase = 0;
-				if (n==0) idbase |= 0x01;
-				if (n==l-1) idbase |= 0x80;
+				if (n==0) idbase |= 0x80;
+				if (n==l-1) idbase |= 0x01;
 				for (uint8_t z=0; z<w; z++) {
 					uint8_t indic = idbase;
 					ihb[z] |= ihmark;

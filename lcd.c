@@ -103,35 +103,53 @@ void lcd_write_dwb(uint8_t *buf, uint8_t w)
 // Some data for dynamic width mode with this font.
 #include "font-dyn-meta.c"
 
-static void lcd_putchar_(unsigned char c, uint8_t dw)
+static PGM_P get_block(uint8_t *w, unsigned char c, uint8_t dw)
 {
-
 	PGM_P block;
 	if (c < 0x20) c = 0x20;
 	block = (const char*)&(my_font[c-0x20][0]);
-	uint8_t w = 8;
+	*w = 8;
 	if (dw) {
 		uint8_t font_meta_b = pgm_read_byte(&(font_metadata[c-0x20]));
 		block += XOFF(font_meta_b);
-		w = DW(font_meta_b);
+		*w = DW(font_meta_b);
 	}
+	return block;
+}
+
+uint8_t lcd_get_strbuf(uint8_t *b, const unsigned char*str, uint8_t dw)
+{
+	uint8_t o=0,w;
+	PGM_P block;
+	while (*str) {
+		block = get_block(&w, *str++, dw);
+		memcpy_P(b+o, block, w);
+		o += w;
+	}
+	return o;
+}
+
+static void lcd_putchar_(unsigned char c, uint8_t dw)
+{
+
+	uint8_t w;
+	PGM_P block = get_block(&w, c, dw);
 	if ((lcdx+w)>LCDWIDTH) {
 		w = LCDWIDTH - lcdx;
 	}
-	dp_write_block_P(block,lcdx, lcdy, w,1);
+	dp_write_block_P(block, lcdx, lcdy, w, 1);
 	lcdx += w;
 }
+
+
 
 static void lcd_putchar_big(unsigned char c)
 {
 	uint8_t buf[32];
 
-	PGM_P block;
-	if (c < 0x20) c = 0x20;
-	block = (const char*)&(my_font[c-0x20][0]);
-	uint8_t font_meta_b = pgm_read_byte(&(font_metadata[c-0x20]));
-	uint8_t w = DW(font_meta_b);
-	block += XOFF(font_meta_b);
+	uint8_t w;
+	PGM_P block = get_block(&w, c, 1);
+
 	if ((lcdx+(w*2))>LCDWIDTH) {
 		w = (LCDWIDTH - lcdx)/2;
 	}
@@ -151,7 +169,7 @@ static void lcd_putchar_big(unsigned char c)
 		buf[(w+i)*2] = lo;
 		buf[(w+i)*2+1] = lo;
 	}
-	dp_write_block(buf,lcdx, lcdy, w*2,2);
+	dp_write_block(buf, lcdx, lcdy, w*2, 2);
 	lcdx += w*2;
 }
 
@@ -160,12 +178,8 @@ static void lcd_putchar_dbig(unsigned char c)
 {
 	uint8_t buf[128];
 
-	PGM_P block;
-	if (c < 0x20) c = 0x20;
-	block = (const char*)&(my_font[c-0x20][0]);
-	uint8_t font_meta_b = pgm_read_byte(&(font_metadata[c-0x20]));
-	uint8_t w = DW(font_meta_b);
-	block += XOFF(font_meta_b);
+	uint8_t w;
+	PGM_P block = get_block(&w, c, 1);
 	if ((lcdx+(w*4))>LCDWIDTH) {
 		w = (LCDWIDTH - lcdx)/2;
 	}
@@ -334,9 +348,8 @@ start:
 /* Fill the screen with one character. */
 void lcd_huge_char(uint8_t c)
 {
-	PGM_P block;
-	if (c < 0x20) c = 0x20;
-	block = (const char*)&(my_font[c-0x20][0]);
+	uint8_t dummy;
+	PGM_P block = get_block(&dummy, c, 0);
 	uint8_t buf[64];
 	lcd_gotoxy_dw(0,0);
 	uint8_t extra = (LCDWIDTH - 64) / 2;

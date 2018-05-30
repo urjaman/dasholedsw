@@ -97,19 +97,19 @@ ISR(TCC4_CCD_vect, FLATTEN ) {
 }
 
 
-//#define F_DEBUG
+#define F_DEBUG
 
 #ifdef F_DEBUG
 ISR(TCD5_OVF_vect) {
-	VPORT1_OUT ^= _BV(6);
+	VPORT1_OUT ^= _BV(7);
 	TCD5_INTFLAGS = 0x01;
 }
 
 static void debug_setup(void) {
-	TCD5_PER = 50000 - 1;
+	TCD5_PER = 35300 - 1;
 	TCD5_CTRLA = TC45_CLKSEL_DIV2_gc;
 	TCD5_INTCTRLA = 3;
-	VPORT1_DIR |= _BV(6);
+	VPORT1_DIR |= _BV(7);
 }
 #endif
 

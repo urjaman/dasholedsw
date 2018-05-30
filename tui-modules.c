@@ -229,3 +229,73 @@ TUI_MOD(tui_odometer_mod,null_ps,"Odometer", 12*LCD_CHARW, 4)
 	lcd_gotoxy_dw(x,y+3);
 	lcd_clear_dw(4*LCD_CHARW);
 }
+
+TUI_MOD(tui_rpm_mod,null_ps,"RPM", LCDWIDTH, 1)
+{
+	const int rpm_mul = 30;
+	const int rpm_per_px = 75;
+	const int redline = 6400;
+	const int optimum = 2600;
+
+	uint8_t dbuf[LCDWIDTH];
+	uint16_t rpm = (pulse_get_hz(PCH_RPM, NULL) * rpm_mul) >> PULSE_HZ_SHIFT;
+
+
+	//unsigned char rpms[5];
+	//luint2str_zp(rpms, rpm%10000, 4);
+	//uint8_t strw = lcd_get_strbuf(dbuf, rpms, 0);
+	memset(dbuf, 0, LCDWIDTH);
+
+	/* Tack the 1000 RPM indicators in there */
+	const int maxrpm = LCDWIDTH*rpm_per_px;
+	for (int i=1000; i < maxrpm;i += 1000) {
+		dbuf[(i + (rpm_per_px/2)) / rpm_per_px] |= 0x7;
+	}
+
+	/* Put the Redline in there */
+	uint8_t rlpix = (redline + (rpm_per_px/2)) / rpm_per_px;
+	dbuf[rlpix] |= 0x3F;
+
+	uint8_t rpmpix = (rpm + (rpm_per_px/2)) / rpm_per_px;
+
+	uint8_t optpix = (optimum + (rpm_per_px/2)) / rpm_per_px;
+
+	for (uint8_t n=0; n < LCDWIDTH; n++) {
+		uint16_t fg = rgb(255,255,255);
+		uint16_t bg = rgb(0,0,0);
+		if (n==rlpix) fg = rgb(128,0,0);
+		if (n<=rpmpix) {
+			if (n>=rlpix) {
+				bg = rgb(255,0,0);
+			} else if (n<=optpix) {
+				uint8_t hp = optpix/2;
+				uint8_t g,b;
+				if (n<=hp) {
+					g = (n * 255) / hp;
+					b = 255;
+				} else {
+					g = 255;
+					b = 255 - ( ((n - hp) * 255) / (optpix - hp) );
+				}
+				bg = rgb(0,g,b);
+			} else {
+				uint8_t zt = rlpix - optpix;
+				uint8_t zn = n - optpix;
+				uint8_t zh = zt / 2;
+				uint8_t r,g;
+				if (zn<=zh) {
+					r = (zn * 255) / zh;
+					g = 255;
+				} else {
+					r = 255;
+					g = 255 - ( ((zn - zh) * 255) / (zt - zh) );
+				}
+				bg = rgb(r,g,0);
+			}
+		}
+		dp_set_fg_bg(fg,bg);
+		lcd_write_dwb(dbuf+n, 1);
+	}
+	tui_default_color();
+
+}

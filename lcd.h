@@ -49,6 +49,10 @@ void lcd_clear_dw(uint8_t w);
 void lcd_clear_big_dw(uint8_t w);
 void lcd_write_dwb(uint8_t *buf, uint8_t w);
 
+/* Pull font data for gfx manipulations. */
+uint8_t lcd_get_strbuf(uint8_t *b, const unsigned char*str, uint8_t dw);
+
+
 /* Nice things to finish with :) */
 void lcd_clear_eol(void); /* clear to end of line */
 void lcd_clear_eos(void); /* clear to end of screen */

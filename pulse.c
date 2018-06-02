@@ -107,7 +107,7 @@ ISR(TCD5_OVF_vect) {
 
 static void debug_setup(void) {
 	TCD5_PER = 35300 - 1;
-	TCD5_CTRLA = TC45_CLKSEL_DIV2_gc;
+	TCD5_CTRLA = TC45_CLKSEL_DIV8_gc;
 	TCD5_INTCTRLA = 3;
 	VPORT1_DIR |= _BV(7);
 }
@@ -140,6 +140,12 @@ void pulse_init(void) {
 }
 
 void pulse_run(void) {
+	if (timer_get_1hzp()) {
+		uint16_t tcd = TCD5_PER - 500;
+		if (tcd < 8800) tcd = 0xFFFF;
+		TCD5_PER = tcd;
+	}
+
 	for (uint8_t i=0;i<PULSE_CHANNELS;i++) {
 		uint8_t sc = pulse.sample_cnt[i];
 		if (sc > 64) { // fastpath

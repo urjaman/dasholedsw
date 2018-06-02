@@ -258,44 +258,57 @@ TUI_MOD(tui_rpm_mod,null_ps,"RPM", LCDWIDTH, 1)
 
 	uint8_t rpmpix = (rpm + (rpm_per_px/2)) / rpm_per_px;
 
-	uint8_t optpix = (optimum + (rpm_per_px/2)) / rpm_per_px;
-
-	for (uint8_t n=0; n < LCDWIDTH; n++) {
-		uint16_t fg = rgb(255,255,255);
-		uint16_t bg = rgb(0,0,0);
-		if (n==rlpix) fg = rgb(128,0,0);
-		if (n<=rpmpix) {
-			if (n>=rlpix) {
-				bg = rgb(255,0,0);
-			} else if (n<=optpix) {
-				uint8_t hp = optpix/2;
-				uint8_t g,b;
-				if (n<=hp) {
-					g = (n * 255) / hp;
-					b = 255;
-				} else {
-					g = 255;
-					b = 255 - ( ((n - hp) * 255) / (optpix - hp) );
-				}
-				bg = rgb(0,g,b);
-			} else {
-				uint8_t zt = rlpix - optpix;
-				uint8_t zn = n - optpix;
-				uint8_t zh = zt / 2;
-				uint8_t r,g;
-				if (zn<=zh) {
-					r = (zn * 255) / zh;
-					g = 255;
-				} else {
-					r = 255;
-					g = 255 - ( ((zn - zh) * 255) / (zt - zh) );
-				}
-				bg = rgb(r,g,0);
-			}
+	uint16_t rpmbg;
+	if (rpm>=redline) {
+		rpmbg = rgb(255,0,0);
+	} else if (rpm<=optimum) {
+		uint16_t hp = optimum/2;
+		uint8_t g,b;
+		if (rpm<=hp) {
+			g = (rpm * 255UL) / hp;
+			b = 255;
+		} else {
+			g = 255;
+			b = 255 - ( ((rpm - hp) * 255UL) / (optimum - hp) );
 		}
-		dp_set_fg_bg(fg,bg);
-		lcd_write_dwb(dbuf+n, 1);
+		rpmbg = rgb(0,g,b);
+	} else {
+		uint16_t zt = redline - optimum;
+		uint16_t zn = rpm - optimum;
+		uint16_t zh = zt / 2;
+		uint8_t r,g;
+		if (zn<=zh) {
+			r = (zn * 255UL) / zh;
+			g = 255;
+		} else {
+			r = 255;
+			g = 255 - ( ((zn - zh) * 255UL) / (zt - zh) );
+		}
+		rpmbg = rgb(r,g,0);
+	}
+	const uint8_t r1 = rpmpix > rlpix ? rlpix : rpmpix;
+	const uint8_t n1 = rlpix - r1;
+	const uint8_t r2 = rpmpix > rlpix ? rpmpix - rlpix : 0;
+	const uint8_t n2 = (LCDWIDTH - rlpix) - r2;
+
+	const uint16_t white = rgb(255, 255, 255);
+	const uint16_t black = rgb(0, 0, 0);
+	if (r1) {
+		dp_set_fg_bg(white, rpmbg);
+		lcd_write_dwb(dbuf, r1);
+	}
+	if (n1) {
+		dp_set_fg_bg(white, black);
+		lcd_write_dwb(dbuf+r1, n1);
+	}
+	uint16_t rlc = rgb(128,8,0);
+	if (r2) {
+		dp_set_fg_bg(rlc, rpmbg);
+		lcd_write_dwb(dbuf+r1+n1, r2);
+	}
+	if (n2) {
+		dp_set_fg_bg(rlc, black);
+		lcd_write_dwb(dbuf+r1+n1+r2, n2);
 	}
 	tui_default_color();
-
 }
